@@ -113,4 +113,25 @@ namespace ams::pcv {
         Module_Extperiph2      = 86,
     };
 
+    enum PowerDomainId : u32 {
+        PcvPowerDomainId_Max77620_Sd0  = 0x3A000080,
+        PcvPowerDomainId_Max77620_Sd1  = 0x3A000081, /* Vdd2. */
+        PcvPowerDomainId_Max77620_Sd2  = 0x3A000082,
+        PcvPowerDomainId_Max77620_Sd3  = 0x3A000083,
+        PcvPowerDomainId_Max77620_Ldo0 = 0x3A0000A0,
+        PcvPowerDomainId_Max77620_Ldo1 = 0x3A0000A1,
+        PcvPowerDomainId_Max77620_Ldo2 = 0x3A0000A2,
+        PcvPowerDomainId_Max77620_Ldo3 = 0x3A0000A3,
+        PcvPowerDomainId_Max77620_Ldo4 = 0x3A0000A4,
+        PcvPowerDomainId_Max77620_Ldo5 = 0x3A0000A5,
+        PcvPowerDomainId_Max77620_Ldo6 = 0x3A0000A6,
+        PcvPowerDomainId_Max77620_Ldo7 = 0x3A0000A7,
+        PcvPowerDomainId_Max77620_Ldo8 = 0x3A0000A8,
+        PcvPowerDomainId_Max77621_Cpu  = 0x3A000003,
+        PcvPowerDomainId_Max77621_Gpu  = 0x3A000004,
+        PcvPowerDomainId_Max77812_Cpu  = 0x3A000003,
+        PcvPowerDomainId_Max77812_Gpu  = 0x3A000004,
+        PcvPowerDomainId_Max77812_Dram = 0x3A000005, /* Vddq. */
+    };
+
 }

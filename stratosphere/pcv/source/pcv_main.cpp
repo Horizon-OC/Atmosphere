@@ -21,6 +21,8 @@
 #include "bpc/pcv_bpc.hpp"
 #include "bpc/pcv_bpc_service.hpp"
 
+#include "rgltr/pcv_rgltr.hpp"
+
 #include "pcv_service/pcv_service_fuse.hpp"
 #include "pcv_service/pcv_service.hpp"
 
@@ -150,21 +152,28 @@ namespace ams {
         os::SetThreadNamePointer(os::GetCurrentThread(), AMS_GET_SYSTEM_THREAD_NAME(pcv, Main));
         AMS_ASSERT(os::GetThreadPriority(os::GetCurrentThread()) == AMS_GET_SYSTEM_THREAD_PRIORITY(pcv, Main));
 
+        /* Initialize rtc */
         R_ABORT_UNLESS(pcv::rtc::Initialize());
         pcv::rtc::InitializeServer();
         pcv::rtc::StartServer();
 
+        /* Initialize bpc. */
         pcv::bpc::Initialize();
         pcv::bpc::StartPowerManager();
         pcv::bpc::InitializeServer();
         pcv::bpc::StartServer();
 
+        /* Initialize rgltr */
+        pcv::rgltr::Initialize();
+
+        /* Initialize pcv services. */
         pcv::detail::InitializeFuseInfo();
         pcv::detail::InitializeServer();
         pcv::detail::StartServer();
 
         AMS_ABORT();
 
+        /* Wait forever. */
         pcv::detail::WaitServer();
     }
 
