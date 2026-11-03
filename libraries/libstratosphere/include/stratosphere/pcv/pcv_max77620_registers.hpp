@@ -163,6 +163,7 @@ namespace ams::pcv {
     constexpr inline u8 Max77620PmicOnOffCnfg2WdRstWkMask  = BIT(6); /* Wake after watchdog reset. */
     constexpr inline u8 Max77620PmicOnOffCnfg2SlpLpmMask   = BIT(5); /* Low-power mode while asleep. */
     constexpr inline u8 Max77620PmicOnOffCnfg2WkAlarm1Mask = BIT(2); /* Wake on RTC alarm 1. */
+    constexpr inline u8 Max77620PmicOnOffCnfg2WkAlarm2Mask = BIT(1); /* Wake on RTC alarm 2? */
     constexpr inline u8 Max77620PmicOnOffCnfg2WkEn0Mask    = BIT(0); /* Wake on power button */
 
     /* ONOFFSTAT bits. */

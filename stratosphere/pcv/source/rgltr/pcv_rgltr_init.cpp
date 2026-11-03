@@ -398,6 +398,53 @@ namespace ams::pcv::rgltr {
 
             regulator.is_present = true;
         }
+
+        void InitializeOnOffConfig() {
+            constexpr u8 OnOffIrqUnmaskBits = Max77620PmicOnOffIrqPowerButtonMask | Max77620PmicOnOffIrqAcOkFallMask | Max77620PmicOnOffIrqAcOkRiseMask;
+
+            /* Read the on off irq mask. */
+            u8 on_off_irq_mask;
+            if (R_SUCCEEDED(I2cRead(g_session, Max77620PmicOnOffIrqMReg, on_off_irq_mask))) {
+                /* Clear it */
+                on_off_irq_mask = 0xFF;
+
+                /* NOTE: Nintendo discards */
+                R_DISCARD(I2cWrite(g_session, Max77620PmicOnOffIrqMReg, on_off_irq_mask));
+            }
+
+            /* Reread it */
+            if (R_SUCCEEDED(I2cRead(g_session, Max77620PmicOnOffIrqMReg, on_off_irq_mask))) {
+                on_off_irq_mask &= ~OnOffIrqUnmaskBits;
+
+                R_DISCARD(I2cWrite(g_session, Max77620PmicOnOffIrqMReg, on_off_irq_mask));
+            }
+
+            /* Write the config. */
+            constexpr u8 ManualResetTime = 7;
+            static_assert(ManualResetTime <= 7);
+
+            u8 on_off_cfg;
+            if (R_SUCCEEDED(I2cRead(g_session, Max77620PmicOnOffCnfg1Reg, on_off_cfg))) {
+                on_off_cfg &= ~Max77620PmicOnOffCnfg1MrtMask;
+                on_off_cfg |= (ManualResetTime << Max77620PmicOnOffCnfg1MrtShift);
+                R_DISCARD(I2cWrite(g_session, Max77620PmicOnOffCnfg1Reg, on_off_cfg));
+            }
+
+            /* Write low battery config. */
+            u8 low_battery_config = Max77620PmicCnfgGlbl1LbDacEnMask | Max77620PmicCnfgGlbl1LbHyst200 | Max77620PmicCnfgGlbl1LbDac2800;
+            if (spl::GetHardwareType() == spl::HardwareType::Calcio) {
+                low_battery_config |= Max77620PmicCnfgGlbl1MppLdMask;
+            }
+            R_DISCARD(I2cWrite(g_session, Max77620PmicCnfgGlbl1Reg, low_battery_config));
+
+            /* Set on off config 2. */
+            u8 on_off_cfg_2;
+            if (R_SUCCEEDED(I2cRead(g_session, Max77620PmicOnOffCnfg2Reg, on_off_cfg_2))) {
+                on_off_cfg_2 &= ~(Max77620PmicOnOffCnfg2WkAlarm1Mask | Max77620PmicOnOffCnfg2WkAlarm2Mask);
+
+                R_DISCARD(I2cWrite(g_session, Max77620PmicOnOffCnfg2Reg, on_off_cfg_2));
+            }
+        }
     }
 
     void InitializeMax77620() {
@@ -428,6 +475,9 @@ namespace ams::pcv::rgltr {
         }
 
         R_ABORT_UNLESS(I2cWrite(g_session, Max77620PmicSdCfg2Reg, step_down_cfg));
+
+        /* Initialize on off config. */
+        InitializeOnOffConfig();
     }
 
 }
