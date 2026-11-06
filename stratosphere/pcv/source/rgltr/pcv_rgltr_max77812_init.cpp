@@ -69,7 +69,6 @@ namespace ams::pcv::rgltr {
             { Max77812GlbCfg2Reg, Max77812StartSlewRateMask, BssSrConfig, },
         };
 
-
         enum PmicType : u32 {
             PmicType_Main        = 1, /* Main pmic (Max77620) */
             PmicType_Erista_Dvfs = 2, /* Erista dvfs pmic, Max77621. */
