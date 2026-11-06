@@ -16,7 +16,7 @@
 
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
-#include "pcv_rgltr_volt.hpp"
+#include "pcv_rgltr_volt_max77620.hpp"
 #include "../pcv_i2c.hpp"
 
 namespace ams::pcv::rgltr {
@@ -315,10 +315,10 @@ namespace ams::pcv::rgltr {
             if (enabled) {
                 /* Enabled regulators are only touched if they have a pmc mask. */
                 if (regulator.pmc_mask && needs_update) {
-                    SetVoltageMainPmic(idx, default_uv);
+                    R_DISCARD(SetVoltageMax77620(idx, default_uv));
                 }
             } else if (needs_update) {
-                SetVoltageMainPmic(idx, default_uv);
+                R_DISCARD(SetVoltageMax77620(idx, default_uv));
             }
         }
 
@@ -356,7 +356,7 @@ namespace ams::pcv::rgltr {
                     regulator.enabled_state = EnabledRegulator;
                 }
                 fps_ok = SetFpsSourceAndPeriods(idx, regulator.fps_src, regulator.fps_pu_period, regulator.fps_pd_period);
-            } else if (regulator.unk_ac) {
+            } else if (regulator.always_on) {
                 if (R_FAILED(WriteEnabledRegister(idx, regulator.enable_value))) {
                     DropRegulatorReference(idx);
                     return;
@@ -396,7 +396,7 @@ namespace ams::pcv::rgltr {
             /* Clamp voltage is the current voltage is out of range. */
             ClampCurrentVoltage(idx, current_volt_uv, enabled);
 
-            regulator.is_present = true;
+            regulator.is_initialized = true;
         }
 
         void InitializeOnOffConfig() {

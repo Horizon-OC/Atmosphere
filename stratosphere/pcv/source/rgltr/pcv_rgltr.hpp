@@ -40,10 +40,11 @@ namespace ams::pcv::rgltr {
                 u32 unk_1;
                 u32 min_uv;
                 u32 max_uv;
-                u32 unk_2;
+                u32 volt_code;
                 u32 default_uv;
             } dvfs_pmic; /* TODO: Better name for this */
             /* Max77621/Nax77812^ */
+            /* Responsible for cpu, gpu and on mariko vddq. */
         };
 
         struct {
@@ -76,7 +77,7 @@ namespace ams::pcv::rgltr {
             u32 fps_pu_period;
             u32 ramp_div;
             u8 is_open;
-            u8 is_present;
+            u8 is_initialized;
             u8 pad_82[2];
             s32 ref_count;
             u8 reg2_init;
@@ -87,18 +88,23 @@ namespace ams::pcv::rgltr {
             u8 pad_9c[4];
             const char *gpio_name;
             u32 enable_count;
-            u32 unk_ac;
+            u32 always_on;
             u32 pmc_mask;
             u32 pmc_bit;
             u8 pad_b8[73];
-            u8 use_alt_reg;
-            u8 cfg102[5];
-            u8 reg107;
-            u8 reg108;
-            u8 cfg109[2];
+            u8 use_vout_d;
+            u8 master_en_mask;
+            u8 lpm_mask;
+            u8 shdn_dly_reg;
+            u8 pokn_mask;
+            u8 pokn_int_mask;
+            u8 vout_reg;
+            u8 vout_d_reg;
+            u8 vout_s_reg;
+            u8 master_cfg_reg;
             u8 pad_10b[5];
-            u32 variant_idx;
-            u32 selected_cfg;
+            u32 dvfs_idx;
+            u32 selected_master;
             u64 pmc_mmio;
         };
     };
@@ -111,11 +117,18 @@ namespace ams::pcv::rgltr {
         u8 sw_enable;
     };
 
+    enum RegulatorVariant : u32 {
+        RegulatorVariant_Erista_Max77621   = 0, /* 15A/15A cpu/gpu configuration. */
+        RegulatorVariant_Mariko_Max77812_A = 1, /* Prototype, 5A/15A configuration (cpu/gpu). */
+        RegulatorVariant_Mariko_Max77812_B = 2, /* Final version, 5/10/5A configuration (cpu/gpu/vddq) */
+    };
+
     constexpr inline size_t RegulatorCount = 18;
 
     void Initialize();
     void SetRegulatorTable(u8 cid4);
     Regulator &GetRegulator(u32 idx);
+    RegulatorVariant GetRegulatorVariant();
 
     constexpr u32 Cid4Erista = 0x35;
     constexpr u32 Cid4Mariko = 0x53;

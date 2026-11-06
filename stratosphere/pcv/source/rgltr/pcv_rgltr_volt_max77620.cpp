@@ -39,7 +39,7 @@ namespace ams::pcv::rgltr {
 
         void VoltageTimeout(const Regulator &regulator, u32 volt_code) {
             const u32 old_volt_code   = regulator.main_pmic.volt_code;
-            const u32 volt_code_delta = (old_volt_code > volt_code) ? (old_volt_code - volt_code) : (volt_code - old_volt_code);
+            const u32 volt_code_delta = static_cast<u32>(std::abs(static_cast<s32>(old_volt_code) - static_cast<s32>(volt_code)));
 
             /* Calculate the timeout. */
             const u32 delay_us = (regulator.main_pmic.step_uv * volt_code_delta) / regulator.ramp_div;
@@ -51,12 +51,12 @@ namespace ams::pcv::rgltr {
 
     }
 
-    void SetVoltageMainPmic(u32 idx, u32 micro_volts) {
+    Result SetVoltageMax77620(u32 idx, u32 micro_volts) {
         Regulator &regulator = GetRegulator(idx);
 
         /* Check if the voltage is safe to apply */
         if (!IsSafeVoltage(regulator, micro_volts)) {
-            return;
+            return -1;
         }
 
         /* Get the voltage code */
@@ -64,16 +64,16 @@ namespace ams::pcv::rgltr {
 
         /* Set the voltage. */
         u8 volt_reg;
-        if (R_SUCCEEDED(I2cRead(*regulator.session, regulator.volt_reg_byte, volt_reg))) {
-            volt_reg = (volt_reg & ~regulator.voltage_mask) | (regulator.voltage_mask & volt_code);
+        R_TRY(I2cRead(*regulator.session, regulator.volt_reg_byte, volt_reg));
+        volt_reg = (volt_reg & ~regulator.voltage_mask) | (regulator.voltage_mask & volt_code);
 
-            if (R_SUCCEEDED(I2cWrite(*regulator.session, regulator.volt_reg_byte, volt_reg))) {
-                VoltageTimeout(regulator, volt_code);
+        R_TRY(I2cWrite(*regulator.session, regulator.volt_reg_byte, volt_reg));
+        VoltageTimeout(regulator, volt_code);
 
-                /* Update voltage. */
-                regulator.main_pmic.volt_code = static_cast<u8>(volt_code);
-            }
-        }
+        /* Update voltage. */
+        regulator.main_pmic.volt_code = static_cast<u8>(volt_code);
+
+        return ResultSuccess();
     }
 
 }

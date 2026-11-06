@@ -16,7 +16,8 @@
 
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
-#include "pcv_rgltr_init.hpp"
+#include "pcv_rgltr_max77620_init.hpp"
+#include "pcv_rgltr_max77812_init.hpp"
 
 namespace ams::pcv::rgltr {
 
@@ -27,9 +28,36 @@ namespace ams::pcv::rgltr {
         constinit Regulator *g_regulator_table = nullptr;
         uintptr_t g_dvfs_mapping;
 
+        u64 GetRegulatorType() {
+            static constinit bool cached        = false;
+            static constinit u64 regulator_type = 0;
+
+            if (!cached) {
+                spl::Initialize();
+                R_ABORT_UNLESS(spl::GetConfig(std::addressof(regulator_type), spl::ConfigItem::RegulatorType));
+                spl::Finalize();
+                cached = true;
+            }
+
+            return regulator_type;
+        }
+
+        constexpr RegulatorVariant RegulatorVariants[] = {
+            RegulatorVariant_Erista_Max77621,
+            RegulatorVariant_Mariko_Max77812_B,
+            RegulatorVariant_Mariko_Max77812_A,
+            RegulatorVariant_Erista_Max77621,
+        };
+
         void InitializeRegulators() {
             /* Initialize the main pmic. */
             InitializeMax77620();
+
+            if (GetRegulatorVariant() /* == Regulator_Mariko_Max77812_B/A */ ) {
+                InitializeMax77812();
+            } else {
+                InitializeMax77621();
+            }
         }
 
         void QueryDvfsMappings() {
@@ -38,6 +66,12 @@ namespace ams::pcv::rgltr {
             g_dvfs_mapping = dd::QueryIoMapping(DvfsBase, DvfsSize);
         }
 
+    }
+
+    RegulatorVariant GetRegulatorVariant() {
+        u64 type = GetRegulatorType();
+
+        return RegulatorVariants[type];
     }
 
     void Initialize() {

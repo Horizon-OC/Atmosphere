@@ -1,4 +1,6 @@
 /*
+ * Copyright (c) 2020 CTCaer
+ * Copyright (c) 2016 NVIDIA CORPORATION. All rights reserved.
  * Copyright (c) Atmosphère-NX
  *
  * This program is free software; you can redistribute it and/or modify it

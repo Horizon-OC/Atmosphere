@@ -19,3 +19,4 @@
 #include <stratosphere/pcv/pcv_types.hpp>
 #include <stratosphere/pcv/pcv_api.hpp>
 #include <stratosphere/pcv/pcv_max77620_registers.hpp>
+#include <stratosphere/pcv/pcv_max77812_registers.hpp>
