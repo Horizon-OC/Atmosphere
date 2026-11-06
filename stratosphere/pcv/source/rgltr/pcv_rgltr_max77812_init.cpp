@@ -103,51 +103,51 @@ namespace ams::pcv::rgltr {
         constexpr size_t MasterCount = 4;
 
         constexpr MasterCfg GpuCfg = {
-            .en_mask        = 0x01,
-            .lpm_mask       = 0x02,
-            .shdn_dly_reg   = 0x0A,
-            .pokn_mask      = 0x01,
-            .pokn_int_mask  = 0x01,
-            .vout_reg       = Max77812M1VoutReg,
-            .vout_d_reg     = Max77812M1VoutDReg,
-            .vout_s_reg     = Max77812M1VoutSReg,
-            .cfg_reg        = Max77812M1CfgReg,
+            .en_mask       = 0x01,
+            .lpm_mask      = 0x02,
+            .shdn_dly_reg  = 0x0A,
+            .pokn_mask     = 0x01,
+            .pokn_int_mask = 0x01,
+            .vout_reg      = Max77812M1VoutReg,
+            .vout_d_reg    = Max77812M1VoutDReg,
+            .vout_s_reg    = Max77812M1VoutSReg,
+            .cfg_reg       = Max77812M1CfgReg,
         };
 
         constexpr MasterCfg M2Cfg = {
-            .en_mask        = 0x04,
-            .lpm_mask       = 0x08,
-            .shdn_dly_reg   = 0x0b,
-            .pokn_mask      = 0x02,
-            .pokn_int_mask  = 0x02,
-            .vout_reg       = Max77812M2VoutReg, /* NOTE: Nintendo almost certainly has a typo here by using m3 vout. */
-            .vout_d_reg     = Max77812M2VoutDReg,
-            .vout_s_reg     = Max77812M2VoutSReg,
-            .cfg_reg        = Max77812M2CfgReg,
+            .en_mask       = 0x04,
+            .lpm_mask      = 0x08,
+            .shdn_dly_reg  = 0x0b,
+            .pokn_mask     = 0x02,
+            .pokn_int_mask = 0x02,
+            .vout_reg      = Max77812M2VoutReg, /* NOTE: Nintendo almost certainly has a typo here by using m3 vout. */
+            .vout_d_reg    = Max77812M2VoutDReg,
+            .vout_s_reg    = Max77812M2VoutSReg,
+            .cfg_reg       = Max77812M2CfgReg,
         };
 
         constexpr MasterCfg VddqCfg = {
-            .en_mask        = 0x10,
-            .lpm_mask       = 0x20,
-            .shdn_dly_reg   = 0x0C,
-            .pokn_mask      = 0x04,
-            .pokn_int_mask  = 0x04,
-            .vout_reg       = Max77812M3VoutReg,
-            .vout_d_reg     = Max77812M3VoutDReg,
-            .vout_s_reg     = Max77812M3VoutSReg,
-            .cfg_reg        = Max77812M3CfgReg,
+            .en_mask       = 0x10,
+            .lpm_mask      = 0x20,
+            .shdn_dly_reg  = 0x0C,
+            .pokn_mask     = 0x04,
+            .pokn_int_mask = 0x04,
+            .vout_reg      = Max77812M3VoutReg,
+            .vout_d_reg    = Max77812M3VoutDReg,
+            .vout_s_reg    = Max77812M3VoutSReg,
+            .cfg_reg       = Max77812M3CfgReg,
         };
 
         constexpr MasterCfg CpuCfg = {
-            .en_mask        = 0x40,
-            .lpm_mask       = 0x80,
-            .shdn_dly_reg   = 0x0D,
-            .pokn_mask      = 0x08,
-            .pokn_int_mask  = 0x08,
-            .vout_reg       = Max77812M4VoutReg,
-            .vout_d_reg     = Max77812M4VoutDReg,
-            .vout_s_reg     = Max77812M4VoutSReg,
-            .cfg_reg        = Max77812M4CfgReg,
+            .en_mask       = 0x40,
+            .lpm_mask      = 0x80,
+            .shdn_dly_reg  = 0x0D,
+            .pokn_mask     = 0x08,
+            .pokn_int_mask = 0x08,
+            .vout_reg      = Max77812M4VoutReg,
+            .vout_d_reg    = Max77812M4VoutDReg,
+            .vout_s_reg    = Max77812M4VoutSReg,
+            .cfg_reg       = Max77812M4CfgReg,
         };
 
         constexpr MasterCfg MasterConfig[MasterCount] = { GpuCfg, M2Cfg, VddqCfg, CpuCfg, };
