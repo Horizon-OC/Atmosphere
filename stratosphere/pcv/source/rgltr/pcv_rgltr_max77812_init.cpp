@@ -120,7 +120,8 @@ namespace ams::pcv::rgltr {
             .shdn_dly_reg  = 0x0b,
             .pokn_mask     = 0x02,
             .pokn_int_mask = 0x02,
--           .vout_reg      = Max77812M2VoutReg, /* NOTE: Nintendo almost certainly has a typo here by using m3 vout. */
+            .vout_reg      = Max77812M2VoutReg, /* NOTE: Nintendo almost certainly has a typo here by using m3 vout. */
+            .vout_d_reg    = Max77812M2VoutDReg,
             .vout_s_reg    = Max77812M2VoutSReg,
             .cfg_reg       = Max77812M2CfgReg,
         };
