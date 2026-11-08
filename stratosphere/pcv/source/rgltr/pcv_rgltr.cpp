@@ -17,6 +17,7 @@
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
 #include "pcv_rgltr_max77620_init.hpp"
+#include "pcv_rgltr_max77621_init.hpp"
 #include "pcv_rgltr_max77812_init.hpp"
 
 namespace ams::pcv::rgltr {
@@ -44,9 +45,8 @@ namespace ams::pcv::rgltr {
 
         constexpr RegulatorVariant RegulatorVariants[] = {
             RegulatorVariant_Erista_Max77621,
-            RegulatorVariant_Mariko_Max77812_B,
             RegulatorVariant_Mariko_Max77812_A,
-            RegulatorVariant_Erista_Max77621,
+            RegulatorVariant_Mariko_Max77812_B,
         };
 
         void InitializeRegulators() {
@@ -69,7 +69,8 @@ namespace ams::pcv::rgltr {
     }
 
     RegulatorVariant GetRegulatorVariant() {
-        u64 type = GetRegulatorType();
+        const u64 type = GetRegulatorType();
+        AMS_ABORT_UNLESS(type < util::size(RegulatorVariants));
 
         return RegulatorVariants[type];
     }

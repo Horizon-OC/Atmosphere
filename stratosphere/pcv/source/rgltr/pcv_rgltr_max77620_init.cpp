@@ -238,7 +238,7 @@ namespace ams::pcv::rgltr {
                 }
             }
 
-            regulator.ramp_div_up = rate;
+            regulator.ramp_rate_uv_per_us = rate;
 
             return true;
         }
@@ -329,7 +329,7 @@ namespace ams::pcv::rgltr {
                 return;
             }
 
-            constexpr u32 PmcBase = 0x70000400;
+            constexpr u32 PmcBase = 0x7000E400;
 
             /* Ensure the regulator not in an invalid state. */
             u32 enabled_register = 0;

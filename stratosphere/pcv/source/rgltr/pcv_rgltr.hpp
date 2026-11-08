@@ -16,10 +16,11 @@
 
 #pragma once
 #include <stratosphere.hpp>
+#include "../gpio/pcv_gpio_handle.hpp"
 
 namespace ams::pcv::rgltr {
 
-    struct __attribute__((packed)) Regulator {
+    struct Regulator {
         u64 id;
         const char *name;
         u32 type;
@@ -64,9 +65,9 @@ namespace ams::pcv::rgltr {
             u32 unk_50;
             u32 unk_54;
             u32 is_ldo;
-            u32 ramp_div_up;
-            u32 enable_delay_ms;
-            u32 unk_64;
+            u32 ramp_rate_uv_per_us;
+            u32 enable_delay_us;
+            u32 disable_delay_us;
             u32 unk_68;
             u8 ramp_bit;
             u8 pad_6d[1];
@@ -80,8 +81,8 @@ namespace ams::pcv::rgltr {
             u8 is_initialized;
             u8 pad_82[2];
             s32 ref_count;
-            u8 reg2_init;
-            u8 reg3_init;
+            u8 ctrl_reg1;
+            u8 ctrl_reg2;
             u8 pad_8a[6];
             i2c::I2cSession *session;
             u32 i2c_device_code;
@@ -91,7 +92,9 @@ namespace ams::pcv::rgltr {
             u32 always_on;
             u32 pmc_mask;
             u32 pmc_bit;
-            u8 pad_b8[73];
+            gpio::GpioDeviceHandle gpio_handle;
+            u8 pad_dc[4];
+            u8 pad_e0[33];
             u8 use_vout_d;
             u8 master_en_mask;
             u8 lpm_mask;

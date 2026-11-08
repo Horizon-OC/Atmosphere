@@ -304,12 +304,14 @@ namespace ams::pcv {
     constexpr inline u8 Max77620PmicGpioDrvMask         = BIT(0);
     constexpr inline u8 Max77620PmicGpioDrvPushPull     = BIT(0);
     constexpr inline u8 Max77620PmicGpioDrvOpenDrain    = 0;
+    constexpr inline u8 Max77620PmicGpioDirShift        = 1;
     constexpr inline u8 Max77620PmicGpioDirMask         = BIT(1);
     constexpr inline u8 Max77620PmicGpioDirInput        = BIT(1);
     constexpr inline u8 Max77620PmicGpioDirOutput       = 0;
     constexpr inline u8 Max77620PmicGpioInputValMask    = BIT(2);
     constexpr inline u8 Max77620PmicGpioOutputValMask   = BIT(3);
     constexpr inline u8 Max77620PmicGpioOutputValHigh   = BIT(3);
+    constexpr inline u8 Max77620PmicGpioOutputValShift  = 0x03;
     constexpr inline u8 Max77620PmicGpioOutputValLow    = 0;
     constexpr inline u8 Max77620PmicGpioIntMask         = 0x3 << 4;
     constexpr inline u8 Max77620PmicGpioIntFalling      = BIT(4);

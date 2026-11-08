@@ -17,7 +17,7 @@
 #pragma once
 #include <stratosphere.hpp>
 
-namespace ams::pcv::bpc::gpio {
+namespace ams::pcv::gpio {
 
     struct Max77620GpioEntry {
         u32 index;
@@ -28,7 +28,7 @@ namespace ams::pcv::bpc::gpio {
 
         u8 bit_mask;
 
-        u8 unk13;
+        u8 ame_reg;
         u8 unk14;
         u8 unk15;
 
@@ -44,5 +44,9 @@ namespace ams::pcv::bpc::gpio {
     };
 
     void InitializeDevices();
+    s32 FindDeviceIdxByName(const char *name);
+    Max77620GpioEntry &GetGpioDevice(u32 idx);
+    void FinalizeDevice(u32 idx);
+    bool IsDeviceReady(u32 idx);
 
 }

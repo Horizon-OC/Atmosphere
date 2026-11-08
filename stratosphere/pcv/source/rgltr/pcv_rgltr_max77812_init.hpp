@@ -30,6 +30,4 @@ namespace ams::pcv::rgltr {
 
     Slew &GetSlew();
 
-    void InitializeMax77621();
-
 }

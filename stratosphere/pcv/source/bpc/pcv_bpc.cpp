@@ -17,7 +17,7 @@
 #include <stratosphere.hpp>
 #include "pcv_bpc_irq_device.hpp"
 #include "pcv_bpc_power_manager.hpp"
-#include "pcv_bpc_gpio.hpp"
+#include "../gpio/pcv_gpio.hpp"
 #include "../pcv_i2c.hpp"
 
 namespace ams::pcv::bpc {
