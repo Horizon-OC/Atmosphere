@@ -20,5 +20,6 @@
 namespace ams::pcv::rgltr {
 
     Result SetVoltageMax77620(u32 idx, u32 micro_volts);
+    bool FinalizeMax77620(u32 idx);
 
 }

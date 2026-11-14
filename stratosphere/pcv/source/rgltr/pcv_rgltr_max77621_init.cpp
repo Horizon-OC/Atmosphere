@@ -20,11 +20,13 @@
 #include "../gpio/pcv_gpio_handle.hpp"
 #include "../pcv_i2c.hpp"
 
-#include "pcv_rgltr_volt_max77621.hpp"
+#include "pcv_rgltr_max77621.hpp"
 
 namespace ams::pcv::rgltr {
 
     namespace {
+
+        i2c::I2cSession g_sessions[RegulatorCount];
 
         bool NeedsSetup(Regulator &regulator) {
             constexpr const char Name[] = "max77621";
@@ -207,6 +209,8 @@ namespace ams::pcv::rgltr {
             if (!NeedsSetup(regulator)) {
                 continue;
             }
+
+            regulator.session = std::addressof(g_sessions[i]);
 
             /* Open the session. */
             R_ABORT_UNLESS(i2c::OpenSession(regulator.session, static_cast<DeviceCode>(regulator.i2c_device_code)));

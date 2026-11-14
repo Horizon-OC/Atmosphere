@@ -57,6 +57,7 @@
 #include <vapours/results/powctl_results.hpp>
 #include <vapours/results/psc_results.hpp>
 #include <vapours/results/pwm_results.hpp>
+#include <vapours/results/rgltr_results.hpp>
 #include <vapours/results/ro_results.hpp>
 #include <vapours/results/rtc_results.hpp>
 #include <vapours/results/scs_results.hpp>

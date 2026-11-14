@@ -32,6 +32,7 @@ namespace ams::pcv {
     constexpr inline u8 Max77621DvcDvsVoltMask    = 0x7F;
     constexpr inline u8 Max77621DvcDvsEnableShift = 7;
     constexpr inline u8 Max77621DvcDvsEnableMask  = (1 << Max77621DvcDvsEnableShift);
+    constexpr inline u8 Max77621DvcDvsEnableBit   = BIT(7);
 
     /* Max77621Vout */
     constexpr inline u8 Max77621VoutDisable    = 0;

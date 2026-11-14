@@ -16,15 +16,9 @@
 
 #pragma once
 #include <stratosphere.hpp>
+#include "../pcv_device_handle.hpp"
 
 namespace ams::pcv::gpio {
-
-    constexpr size_t GpioDeviceNameSize = 32;
-
-    struct GpioDeviceHandle {
-        char name[GpioDeviceNameSize];
-        s32 device_index;
-    };
 
     enum GpioDirection : u8 {
         GpioDirection_Output = 0,
@@ -43,17 +37,17 @@ namespace ams::pcv::gpio {
         GpioPullState_Invalid = 3,
     };
 
-    bool SetDeviceHandleName(GpioDeviceHandle *handle, const char *name);
+    bool SetDeviceHandleName(DeviceHandle *handle, const char *name);
 
-    Result FinalizeHandle(GpioDeviceHandle *handle);
+    Result FinalizeHandle(DeviceHandle *handle);
 
-    Result ReadAlternateMode(GpioDeviceHandle *handle);
-    Result GetDirection(GpioDeviceHandle *handle, GpioDirection &direction);
-    Result SetDirection(GpioDeviceHandle *handle, GpioDirection direction);
-    Result GetDriveMode(GpioDeviceHandle *hande, GpioDriveMode &mode);
-    Result SetDriveMode(GpioDeviceHandle *hande, GpioDriveMode mode);
-    Result GetPullState(GpioDeviceHandle *handle, GpioPullState &out_state);
-    Result GetOutputValue(GpioDeviceHandle *handle, u8 &output_value);
-    Result SetOutputValue(GpioDeviceHandle *handle, u8 output_value);
+    Result ReadAlternateMode(DeviceHandle *handle);
+    Result GetDirection(DeviceHandle *handle, GpioDirection &direction);
+    Result SetDirection(DeviceHandle *handle, GpioDirection direction);
+    Result GetDriveMode(DeviceHandle *hande, GpioDriveMode &mode);
+    Result SetDriveMode(DeviceHandle *hande, GpioDriveMode mode);
+    Result GetPullState(DeviceHandle *handle, GpioPullState &out_state);
+    Result GetOutputValue(DeviceHandle *handle, u8 &output_value);
+    Result SetOutputValue(DeviceHandle *handle, u8 output_value);
 
 }

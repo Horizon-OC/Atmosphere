@@ -278,6 +278,8 @@ namespace ams::pcv {
     constexpr inline u8 Max77620PmicLdoCfg3Track4Shift = 5;
     constexpr inline u8 Max77620PmicLdoSlewRateMask    = 0x1;
 
+    constexpr inline u8 Max77620PmicLdoPowerOkMask = BIT(3);
+
     /* SD CFG1 bits. */
     constexpr inline u8 Max77620PmicSdSrMask             = 0xC0;
     constexpr inline u8 Max77620PmicSdSrShift            = 6;

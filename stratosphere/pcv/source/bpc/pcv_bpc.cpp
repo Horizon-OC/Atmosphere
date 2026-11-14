@@ -25,7 +25,7 @@ namespace ams::pcv::bpc {
     namespace {
 
         void ConfigurePmicRtcClockRegisters() {
-            constexpr dd::PhysicalAddress PmcBase = 0x7000E400ul; /* APBDEV_PMC_CNTRL. */
+            constexpr dd::PhysicalAddress PmcBase = 0x7000E400; /* APBDEV_PMC_CNTRL. */
             constexpr u32 IntrPolarity            = 0x20000;
 
             u32 apb_dev_pmc_cntrl = 0;

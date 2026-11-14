@@ -17,8 +17,13 @@
 #pragma once
 #include <stratosphere.hpp>
 
-namespace ams::pcv::rgltr {
+namespace ams::pcv {
 
-    Result SetVoltageMax77621(u32 idx, u32 micro_volts);
+    constexpr size_t DeviceNameSize = 32;
+
+    struct DeviceHandle {
+        char name[DeviceNameSize];
+        s32 device_index;
+    };
 
 }

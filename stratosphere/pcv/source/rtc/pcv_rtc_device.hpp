@@ -290,7 +290,7 @@ namespace ams::pcv::rtc {
             }
 
             Result ReadTime(RtcRegisters *out) {
-                R_UNLESS(IsReady(),      ResultDeviceNotReady());
+                R_UNLESS(IsReady(),      ResultRtcAccessFailed());
                 R_UNLESS(out != nullptr, ResultInvalidArgument());
 
                 /* Read the alarm time registers. */
@@ -309,7 +309,7 @@ namespace ams::pcv::rtc {
             }
 
             Result SetTime(RtcRegisters *in_regs) {
-                R_UNLESS(IsReady(),          ResultDeviceNotReady());
+                R_UNLESS(IsReady(),          ResultRtcAccessFailed());
                 R_UNLESS(in_regs != nullptr, ResultInvalidArgument());
 
                 /* Write the alarm time registers. */
@@ -381,13 +381,13 @@ namespace ams::pcv::rtc {
             ALWAYS_INLINE bool IsReady() const { return m_ready; }
 
             Result ReadInterruptMask(u8 *out) {
-                R_UNLESS(IsReady(), ResultDeviceNotReady());
+                R_UNLESS(IsReady(), ResultRtcAccessFailed());
 
                 return ReadRtcRegisters(Max77620RtcIntMReg, 1, out);
             }
 
             Result WriteAlarmTime(u32 alarm_id, const RtcRegisters &time) {
-                R_UNLESS(IsReady(),             ResultDeviceNotReady());
+                R_UNLESS(IsReady(),             ResultAlarmAccessFailed());
                 R_UNLESS(alarm_id < AlarmCount, ResultInvalidArgument());
 
                 const u8 alarm_register = GetAlarmRegister(alarm_id);

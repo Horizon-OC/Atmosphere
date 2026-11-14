@@ -21,8 +21,6 @@ R_DEFINE_NAMESPACE_RESULT_MODULE(ams::pcv::bpc, 135);
 
 namespace ams::pcv::bpc {
 
-    /* Todo check if this is already used. */
-    R_DEFINE_ERROR_RESULT(DeviceNotReady, 1);
     R_DEFINE_ERROR_RESULT(InvalidArgument, 5);
 
 }

@@ -77,7 +77,7 @@ namespace ams::pcv::bpc {
     }
 
     Result IrqDevice::SetRtcCallback(IrqCallbackFn callback) {
-        R_UNLESS(m_is_ready, ResultDeviceNotReady());
+        R_UNLESS(m_is_ready, ResultInvalidArgument());
 
         m_rtc_callback = callback;
 
@@ -85,7 +85,7 @@ namespace ams::pcv::bpc {
     }
 
     Result IrqDevice::SetOnOffCallback(IrqCallbackFn callback) {
-        R_UNLESS(m_is_ready, ResultDeviceNotReady());
+        R_UNLESS(m_is_ready, ResultInvalidArgument());
 
         m_on_off_callback = callback;
 
@@ -163,7 +163,7 @@ namespace ams::pcv::bpc {
     }
 
     Result IrqDevice::HandleInterrupt() {
-        R_UNLESS(m_is_ready, ResultDeviceNotReady());
+        R_UNLESS(m_is_ready, ResultInvalidArgument());
 
         /* Enable interrupt glblm. */
         R_TRY(EnableInterruptGlblm());

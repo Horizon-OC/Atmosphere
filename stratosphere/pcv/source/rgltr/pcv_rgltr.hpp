@@ -20,10 +20,16 @@
 
 namespace ams::pcv::rgltr {
 
+    enum PmicType : u32 {
+        PmicType_Main        = 1, /* Main pmic (Max77620) */
+        PmicType_Erista_Dvfs = 2, /* Erista dvfs pmic, Max77621. */
+        PmicType_Mariko_Dvfs = 3, /* Mariko dvfs pmic, Max77812. */
+    };
+
     struct Regulator {
         u64 id;
         const char *name;
-        u32 type;
+        PmicType type;
 
         union {
             struct {
@@ -68,7 +74,7 @@ namespace ams::pcv::rgltr {
             u32 ramp_rate_uv_per_us;
             u32 enable_delay_us;
             u32 disable_delay_us;
-            u32 unk_68;
+            u32 sd_status_mask;
             u8 ramp_bit;
             u8 pad_6d[1];
             u8 forced_on;
@@ -92,7 +98,7 @@ namespace ams::pcv::rgltr {
             u32 always_on;
             u32 pmc_mask;
             u32 pmc_bit;
-            gpio::GpioDeviceHandle gpio_handle;
+            DeviceHandle gpio_handle;
             u8 pad_dc[4];
             u8 pad_e0[33];
             u8 use_vout_d;
@@ -127,6 +133,7 @@ namespace ams::pcv::rgltr {
     };
 
     constexpr inline size_t RegulatorCount = 18;
+    constexpr inline u32 RegulatorMaxIdx   = RegulatorCount - 1;
 
     void Initialize();
     void SetRegulatorTable(u8 cid4);

@@ -26,15 +26,15 @@ namespace ams::pcv::bpc {
         public:
             using IrqCallbackFn = void(*)(u32 flags);
         private:
-            bool m_is_ready = false;
-            u8 m_saved_int_en_lbt      = 0;
+            bool m_is_ready       = false;
+            u8 m_saved_int_en_lbt = 0;
 
             i2c::I2cSession m_pmic_session{};
             i2c::I2cSession m_rtc_session{};
 
             /* Note: Nintendo has no thermal or low battery callbacks, and registers a nop rtc callback. */
-            IrqCallbackFn m_rtc_callback         = nullptr;
-            IrqCallbackFn m_on_off_callback      = nullptr;
+            IrqCallbackFn m_rtc_callback    = nullptr;
+            IrqCallbackFn m_on_off_callback = nullptr;
         private:
             void UnmaskTopInterrupt(u8 mask);
             void SetLbtInterruptsEnabled(u8 mask, bool enable);

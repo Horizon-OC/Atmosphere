@@ -29,11 +29,11 @@ namespace ams::pcv::gpio {
 
     }
 
-    bool SetDeviceHandleName(GpioDeviceHandle *handle, const char *name) {
+    bool SetDeviceHandleName(DeviceHandle *handle, const char *name) {
         /* Note: Nintendo has (technically) a bug here: They have an off by one in the length check and then proceed to use strcpy. */
         /* This can technically overwrite the device index, but the gpio names are too short for that to occur. */
 
-        if (handle == nullptr || name == nullptr || std::strlen(name) >= GpioDeviceNameSize) {
+        if (handle == nullptr || name == nullptr || std::strlen(name) >= DeviceNameSize) {
             return false;
         }
 
@@ -50,7 +50,7 @@ namespace ams::pcv::gpio {
         return true;
     }
 
-    Result FinalizeHandle(GpioDeviceHandle *handle) {
+    Result FinalizeHandle(DeviceHandle *handle) {
         R_UNLESS(IsDeviceReady(handle->device_index), DeviceNotReady);
 
         FinalizeDevice(handle->device_index);
@@ -58,7 +58,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result ReadAlternateMode(GpioDeviceHandle *handle) {
+    Result ReadAlternateMode(DeviceHandle *handle) {
         /* NOTE: Nintendo returns a specific value depending on the index, bitmask of the device and the register value, */
         /* But they never use it. */
         /* TODO: Determine if we should do the same. */
@@ -75,7 +75,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result GetDirection(GpioDeviceHandle *handle, GpioDirection &direction) {
+    Result GetDirection(DeviceHandle *handle, GpioDirection &direction) {
         R_UNLESS(IsDeviceReady(handle->device_index), DeviceNotReady);
         {
             GpioDevice &device = GetGpioDevice(handle->device_index);
@@ -90,7 +90,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result SetDirection(GpioDeviceHandle *handle, GpioDirection direction) {
+    Result SetDirection(DeviceHandle *handle, GpioDirection direction) {
         /* Only keep the lowest bit. */
         const u8 dir_bit = static_cast<u8>(direction) & 1;
 
@@ -112,7 +112,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result GetDriveMode(GpioDeviceHandle *handle, GpioDriveMode &mode) {
+    Result GetDriveMode(DeviceHandle *handle, GpioDriveMode &mode) {
         R_UNLESS(IsDeviceReady(handle->device_index), DeviceNotReady);
         {
             GpioDevice &device = GetGpioDevice(handle->device_index);
@@ -127,7 +127,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result SetDriveMode(GpioDeviceHandle *handle, GpioDriveMode mode) {
+    Result SetDriveMode(DeviceHandle *handle, GpioDriveMode mode) {
         /* Only keep the lowest bit. */
         const u8 mode_bit = static_cast<u8>(mode) & 1;
 
@@ -149,7 +149,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result GetPullState(GpioDeviceHandle *handle, GpioPullState &out_state) {
+    Result GetPullState(DeviceHandle *handle, GpioPullState &out_state) {
         /* On failure: */
         out_state = GpioPullState_Invalid;
 
@@ -187,7 +187,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result GetOutputValue(GpioDeviceHandle *handle, u8 &output_value) {
+    Result GetOutputValue(DeviceHandle *handle, u8 &output_value) {
         R_UNLESS(IsDeviceReady(handle->device_index), DeviceNotReady);
         {
             GpioDevice &device = GetGpioDevice(handle->device_index);
@@ -201,7 +201,7 @@ namespace ams::pcv::gpio {
         return ResultSuccess();
     }
 
-    Result SetOutputValue(GpioDeviceHandle *handle, u8 output_value) {
+    Result SetOutputValue(DeviceHandle *handle, u8 output_value) {
         /* Only keep the lowest bit. */
         output_value &= 1;
 

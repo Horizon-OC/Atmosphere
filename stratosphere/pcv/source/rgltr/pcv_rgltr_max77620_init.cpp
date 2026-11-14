@@ -16,8 +16,9 @@
 
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
-#include "pcv_rgltr_volt_max77620.hpp"
+#include "pcv_rgltr_max77620.hpp"
 #include "../pcv_i2c.hpp"
+#include "../pcv_hardware_type.hpp"
 
 namespace ams::pcv::rgltr {
 
@@ -432,7 +433,7 @@ namespace ams::pcv::rgltr {
 
             /* Write low battery config. */
             u8 low_battery_config = Max77620PmicCnfgGlbl1LbDacEnMask | Max77620PmicCnfgGlbl1LbHyst200 | Max77620PmicCnfgGlbl1LbDac2800;
-            if (spl::GetHardwareType() == spl::HardwareType::Calcio) {
+            if (pcv::GetHardwareType() == spl::HardwareType::Calcio) {
                 low_battery_config |= Max77620PmicCnfgGlbl1MppLdMask;
             }
             R_DISCARD(I2cWrite(g_session, Max77620PmicCnfgGlbl1Reg, low_battery_config));
@@ -445,6 +446,54 @@ namespace ams::pcv::rgltr {
                 R_DISCARD(I2cWrite(g_session, Max77620PmicOnOffCnfg2Reg, on_off_cfg_2));
             }
         }
+
+        Result IsPowerGood(bool &out, const Regulator &regulator) {
+            u8 status;
+
+            if (regulator.is_ldo) {
+                R_TRY(I2cRead(*regulator.session, regulator.config_reg, status));
+                out = (status & Max77620PmicLdoPowerOkMask) != 0;
+            } else {
+                R_TRY(I2cRead(*regulator.session, Max77620PmicStatSdReg, status));
+                out = (status & regulator.sd_status_mask) == 0;
+            }
+
+            return ResultSuccess();
+        }
+
+        Result WaitForPowerGood(const Regulator &regulator) {
+            /* 1s max polling. */
+            constexpr u32 EnablePollPeriodUs     = 50;
+            constexpr u32 EnablePollCount        = 20021;
+            constexpr Result ResultEnableTimeout = -14;
+
+            for (u32 i = 0; i < EnablePollCount; ++i) {
+                bool power_good;
+                R_TRY(IsPowerGood(power_good, regulator));
+
+                if (power_good) {
+                    svc::SleepThread(static_cast<s64>(1000) * regulator.enable_delay_us);
+                    return ResultSuccess();
+                }
+
+                svc::SleepThread(static_cast<s64>(1000) * EnablePollPeriodUs);
+            }
+
+            return ResultEnableTimeout;
+        }
+
+        void ClearPmcNoIoPowerBit(const Regulator &regulator) {
+            constexpr u32 AbpdevPmcNoIoPower = 0x44;
+
+            u32 no_io_power = 0;
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, ~0, no_io_power & ~regulator.pmc_bit));
+
+            /* Nintendo rereads the value twice. */
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
+        }
+
     }
 
     void InitializeMax77620() {
@@ -470,7 +519,8 @@ namespace ams::pcv::rgltr {
 
         /* Configure step down regulators config. */
         u8 step_down_cfg = 4;
-        if (spl::GetHardwareType() == spl::HardwareType::Calcio) {
+
+        if (pcv::GetHardwareType() == spl::HardwareType::Calcio) {
             step_down_cfg = 0;
         }
 
@@ -478,6 +528,31 @@ namespace ams::pcv::rgltr {
 
         /* Initialize on off config. */
         InitializeOnOffConfig();
+    }
+
+    Result EnableMax77620(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        if (regulator.fps_src != FpsSourceNone) {
+            return ResultSuccess();
+        }
+
+        /* Only the first regulator can be forced on. */
+        if (idx == 0 && regulator.forced_on) {
+            return ResultSuccess();
+        }
+
+        const u8 enable_value = regulator.enable_value;
+        R_TRY(WriteEnabledRegister(idx, enable_value));
+        regulator.enabled_state = enable_value;
+
+        const Result result = WaitForPowerGood(regulator);
+
+        if (regulator.pmc_bit) {
+            ClearPmcNoIoPowerBit(regulator);
+        }
+
+        return result;
     }
 
 }

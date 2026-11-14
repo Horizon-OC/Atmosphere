@@ -16,6 +16,7 @@
 
 #include <stratosphere.hpp>
 #include "pcv_bpc_power_manager.hpp"
+#include "../pcv_hardware_type.hpp"
 #include "pcv_bpc_irq_device.hpp"
 #include "pcv_bpc_pmic_registers.hpp"
 #include "pcv_bpc_fuel_gauge_registers.hpp"
@@ -384,7 +385,7 @@ namespace ams::pcv::bpc {
 
         /* Check if the charge is high on lites. */
         bool high_charge = false;
-        if (spl::GetHardwareType() == spl::HardwareType::Hoag) {
+        if (GetHardwareType() == spl::HardwareType::Hoag) {
             u16 soc_rep = 0;
             if (R_SUCCEEDED(I2cRead(fuel_gauge_session, Max17050SocRepReg, soc_rep))) {
                 high_charge = (soc_rep >> 8) >= Max17050HighChargePercent;
@@ -421,7 +422,7 @@ namespace ams::pcv::bpc {
         }
 
         /* Disable the wake alarm. */
-        if (!enable_quasi_off || reboot || spl::GetHardwareType() == spl::HardwareType::Calcio) {
+        if (!enable_quasi_off || reboot || GetHardwareType() == spl::HardwareType::Calcio) {
             R_ABORT_UNLESS(SetWakeAlarm(false, true));
         } else {
             R_ABORT_UNLESS(SetWakeAlarm(true, true));
@@ -472,9 +473,9 @@ namespace ams::pcv::bpc {
         R_UNLESS(out_event != nullptr, ResultInvalidArgument());
 
         /* Nintendo only supports target 0 */
-        R_UNLESS(target == 0, ResultInvalidArgument());
-
-        *out_event = std::addressof(m_ac_ok_system_event);
+        if (target == 0) {
+            *out_event = std::addressof(m_ac_ok_system_event);
+        }
 
         return ResultSuccess();
     }
@@ -483,9 +484,9 @@ namespace ams::pcv::bpc {
         R_UNLESS(out_event != nullptr, ResultInvalidArgument());
 
         /* Nintendo only supports target 0 */
-        R_UNLESS(target == 0, ResultInvalidArgument());
-
-        *out_event = std::addressof(m_power_button_system_event);
+        if (target == 0) {
+            *out_event = std::addressof(m_power_button_system_event);
+        }
 
         return ResultSuccess();
     }

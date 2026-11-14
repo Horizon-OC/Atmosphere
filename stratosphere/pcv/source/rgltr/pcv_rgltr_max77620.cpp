@@ -16,6 +16,8 @@
 
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
+#include "pcv_rgltr_max77620.hpp"
+#include "pcv_rgltr_common_volt.hpp"
 #include "../pcv_i2c.hpp"
 
 namespace ams::pcv::rgltr {
@@ -24,29 +26,20 @@ namespace ams::pcv::rgltr {
 
         bool IsSafeVoltage(const Regulator &regulator, u32 voltage) {
             /* NOTE: Nintendo uses default_uv as the lower bound. Might be a bug? */
-            if (voltage < regulator.main_pmic.default_uv || voltage > regulator.main_pmic.max_uv) {
-                return false;
-            }
-
-            return true;
+            return IsVoltageInRange(voltage, regulator.main_pmic.default_uv, regulator.main_pmic.max_uv);
         }
 
         u32 GetVoltCode(const Regulator &regulator, u32 voltage) {
-            const u32 step_uv = regulator.main_pmic.step_uv;
-
-            return (voltage - regulator.main_pmic.min_uv + step_uv - 1) / step_uv;
+            return GetVoltCodeImpl(voltage, regulator.main_pmic.min_uv, regulator.main_pmic.step_uv);
         }
 
         void VoltageTimeout(const Regulator &regulator, u32 volt_code) {
-            const u32 old_volt_code   = regulator.main_pmic.volt_code;
-            const u32 volt_code_delta = static_cast<u32>(std::abs(static_cast<s32>(old_volt_code) - static_cast<s32>(volt_code)));
+            const u32 volt_code_delta = GetVoltCodeDelta(regulator.main_pmic.volt_code, volt_code);
 
             /* Calculate the timeout. */
             const u32 delay_us = (regulator.main_pmic.step_uv * volt_code_delta) / regulator.ramp_div;
 
-            if (delay_us >= 1) {
-                svc::SleepThread(static_cast<s64>(1000) * delay_us);
-            }
+            SleepForRamp(delay_us);
         }
 
     }
@@ -55,9 +48,7 @@ namespace ams::pcv::rgltr {
         Regulator &regulator = GetRegulator(idx);
 
         /* Check if the voltage is safe to apply */
-        if (!IsSafeVoltage(regulator, micro_volts)) {
-            return -1;
-        }
+        R_UNLESS(IsSafeVoltage(regulator, micro_volts), ResultInvalidArgument());
 
         /* Get the voltage code */
         const u32 volt_code = GetVoltCode(regulator, micro_volts);
@@ -74,6 +65,20 @@ namespace ams::pcv::rgltr {
         regulator.main_pmic.volt_code = static_cast<u8>(volt_code);
 
         return ResultSuccess();
+    }
+
+    bool FinalizeMax77620(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        if (regulator.ref_count <= 0) {
+            return false;
+        }
+
+        if (--regulator.ref_count == 0) {
+            regulator.is_open = false;
+        }
+
+        return true;
     }
 
 }

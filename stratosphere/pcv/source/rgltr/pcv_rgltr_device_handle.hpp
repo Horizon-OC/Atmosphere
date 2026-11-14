@@ -16,9 +16,13 @@
 
 #pragma once
 #include <stratosphere.hpp>
+#include "../pcv_device_handle.hpp"
+#include "pcv_rgltr.hpp"
 
 namespace ams::pcv::rgltr {
 
-    Result SetVoltageMax77812Reg(u32 idx, u32 micro_volts, u8 reg);
+    bool InitializeHandleByName(DeviceHandle *handle, const char *name);
+    bool FinalizeHandle(DeviceHandle *handle);
+    bool IsRegulatorOpen(u32 idx);
 
 }

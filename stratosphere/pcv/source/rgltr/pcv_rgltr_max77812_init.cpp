@@ -17,7 +17,7 @@
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
 #include "pcv_rgltr_max77812_init.hpp"
-#include "pcv_rgltr_volt_max77812.hpp"
+#include "pcv_rgltr_max77812.hpp"
 #include "../pcv_i2c.hpp"
 
 namespace ams::pcv::rgltr {
@@ -67,12 +67,6 @@ namespace ams::pcv::rgltr {
             { Max77812GlbCfg1Reg, Max77812StartSlewRateMask, BssSrConfig, },
             { Max77812GlbCfg2Reg, Max77812ShdnSlewRateMask,  BsdSrConfig, },
             { Max77812GlbCfg2Reg, Max77812StartSlewRateMask, BssSrConfig, },
-        };
-
-        enum PmicType : u32 {
-            PmicType_Main        = 1, /* Main pmic (Max77620) */
-            PmicType_Erista_Dvfs = 2, /* Erista dvfs pmic, Max77621. */
-            PmicType_Mariko_Dvfs = 3, /* Mariko dvfs pmic, Max77812. */
         };
 
         enum DvfsIdx : u32 {

@@ -16,6 +16,8 @@
 
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
+#include "pcv_rgltr_max77621.hpp"
+#include "pcv_rgltr_common_volt.hpp"
 #include "../pcv_i2c.hpp"
 
 namespace ams::pcv::rgltr {
@@ -23,29 +25,20 @@ namespace ams::pcv::rgltr {
     namespace {
 
         bool IsSafeVoltage(const Regulator &regulator, u32 voltage) {
-            if (voltage < regulator.dvfs_pmic.min_uv || voltage > regulator.dvfs_pmic.max_uv) {
-                return false;
-            }
-
-            return true;
+            return IsVoltageInRange(voltage, regulator.dvfs_pmic.min_uv, regulator.dvfs_pmic.max_uv);
         }
 
         u8 GetVoltCode(const Regulator &regulator, u32 voltage) {
-            const u32 step_uv = regulator.dvfs_pmic.step_uv;
-
-            return static_cast<u8>(util::DivideUp(voltage - regulator.dvfs_pmic.min_uv, step_uv) + 2);
+            return static_cast<u8>(GetVoltCodeImpl(voltage, regulator.dvfs_pmic.min_uv, regulator.dvfs_pmic.step_uv) + 2);
         }
 
         void VoltageTimeout(const Regulator &regulator, u32 volt_code) {
-            const u32 old_volt_code   = regulator.dvfs_pmic.volt_code;
-            const u32 volt_code_delta = static_cast<u32>(std::abs(static_cast<s32>(old_volt_code) - static_cast<s32>(volt_code)));
+            const u32 volt_code_delta = GetVoltCodeDelta(regulator.dvfs_pmic.volt_code, volt_code);
 
             /* Calculate the timeout. */
             const u32 delay_us = (regulator.dvfs_pmic.step_uv * volt_code_delta) / regulator.ramp_rate_uv_per_us;
 
-            if (delay_us >= 1) {
-                svc::SleepThread(static_cast<s64>(1000) * delay_us);
-            }
+            SleepForRamp(delay_us);
         }
 
     }
@@ -54,9 +47,7 @@ namespace ams::pcv::rgltr {
         Regulator &regulator = GetRegulator(idx);
 
         /* Check that the voltage is safe to apply. */
-        if (!IsSafeVoltage(regulator, micro_volts)) {
-            return -1; /* Todo figure out a better way of handling this. */
-        }
+        R_UNLESS(IsSafeVoltage(regulator, micro_volts), ResultInvalidArgument());
 
         u8 volt_code = GetVoltCode(regulator, micro_volts);
         u8 vout      = volt_code | Max77621DvcDvsEnableMask;
@@ -70,4 +61,44 @@ namespace ams::pcv::rgltr {
 
         return ResultSuccess();
     }
+
+    Result EnableMax77621(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        /* Only the first reference actually enables the regulator. */
+        if (regulator.enable_count++ != 0) {
+            return ResultSuccess();
+        }
+
+        /* Enable. */
+        u8 vout;
+        R_TRY(I2cRead(*regulator.session, Max77621VoutReg, vout));
+        vout |= Max77621DvcDvsEnableBit;
+
+        R_TRY(I2cWrite(*regulator.session, Max77621VoutReg, vout));
+
+        /* Wait for it to be enabled. */
+        if (regulator.enable_delay_us) {
+            svc::SleepThread(static_cast<s64>(1000) * regulator.enable_delay_us);
+        }
+
+        return ResultSuccess();
+    }
+
+    bool FinalizeMax77621(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        if (regulator.ref_count < 1) {
+            return false;
+        }
+
+        if (regulator.ref_count == 1) {
+            i2c::CloseSession(*regulator.session);
+            regulator.is_open = false;
+        }
+
+        --regulator.ref_count;
+        return true;
+    }
+
 }

@@ -18,6 +18,10 @@
 
 namespace ams::regulator {
 
-    /* ... */
+    /* Power control targets. */
+    constexpr inline const DeviceCode DeviceCode_GcCardPower3v1       = 0x3C000404; /* Ldo3 */
+    constexpr inline const DeviceCode DeviceCode_GcCardPower1v8       = 0x3C000405; /* Ldo5 */
+    constexpr inline const DeviceCode DeviceCode_DisplayPortHdmiPower = 0x34000007; /* Ldo8 */
+    constexpr inline const DeviceCode DeviceCode_SioMcuPower          = 0x3500041A; /* Ldo8, Max77812_B only */
 
 }
