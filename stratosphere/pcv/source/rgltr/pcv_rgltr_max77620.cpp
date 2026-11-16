@@ -64,7 +64,7 @@ namespace ams::pcv::rgltr {
         /* Update voltage. */
         regulator.main_pmic.volt_code = static_cast<u8>(volt_code);
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     bool FinalizeMax77620(u32 idx) {

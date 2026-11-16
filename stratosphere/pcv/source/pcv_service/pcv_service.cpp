@@ -23,13 +23,13 @@ namespace ams::pcv::detail {
     Result PcvService::GetFuseInfo(const sf::OutArray<u32> &out_info, s32 max_count, sf::Out<s32> out_count) {
         impl::GetFuseInfo(reinterpret_cast<FuseInfo *>(out_info.GetPointer()), max_count, out_count.GetPointer());
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result PcvService::GetDramId(sf::Out<u32> out_id) {
         impl::GetDramId(out_id.GetPointer());
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
 }

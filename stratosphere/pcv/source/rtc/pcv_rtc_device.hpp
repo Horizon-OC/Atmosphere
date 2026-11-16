@@ -130,7 +130,7 @@ namespace ams::pcv::rtc {
                     R_TRY(I2cRead(m_session, reg + i, out[i]));
                 }
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result WriteRtcRegisters(u8 reg, u8 count, const u8 *data) {
@@ -148,7 +148,7 @@ namespace ams::pcv::rtc {
                 u8 out = 0;
                 R_TRY(I2cReadUntilFlagClear(m_session, Max77620RtcUpdate0Reg, out, Max77620RtcWriteUpdate));
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             ALWAYS_INLINE void ClearAlarmEnableBits(HwTimeRegisters &alarm) {
@@ -235,7 +235,7 @@ namespace ams::pcv::rtc {
 
                 *out = (control & (Max77620RtcBinFormat | Max77620Rtc24h)) == Max77620Rtc24h;
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result ResetToDefaults() {
@@ -245,7 +245,7 @@ namespace ams::pcv::rtc {
                 R_TRY(WriteRtcRegisters(Max77620RtcAlarm1Reg, sizeof(DefaultTimeRegisters), defaults));
                 R_TRY(WriteRtcRegisters(Max77620RtcAlarm2Reg, sizeof(DefaultTimeRegisters), defaults));
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result SetAlarmEnabledImpl(u32 alarm_id, bool enable) {
@@ -286,7 +286,7 @@ namespace ams::pcv::rtc {
                 /* Write back the interrupt mask and cache it. */
                 R_TRY(WriteRtcRegisters(Max77620RtcIntMReg, 1, std::addressof(interrupt_mask)));
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result ReadTime(RtcRegisters *out) {
@@ -305,7 +305,7 @@ namespace ams::pcv::rtc {
                 out->year    = regs.year    & Max77620RtcYearValueMask;
                 out->day     = regs.day     & Max77620RtcDayValueMask;
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result SetTime(RtcRegisters *in_regs) {
@@ -375,7 +375,7 @@ namespace ams::pcv::rtc {
 
                 m_ready = true;
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             ALWAYS_INLINE bool IsReady() const { return m_ready; }
@@ -418,7 +418,7 @@ namespace ams::pcv::rtc {
                 /* Enable the alarm. */
                 R_UNLESS(R_SUCCEEDED(SetAlarmEnabledImpl(alarm_id, true)), ResultAlarmAccessFailed());
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result DisableAlarm(u32 alarm_id) {
@@ -440,7 +440,7 @@ namespace ams::pcv::rtc {
                 /* Set the alarm time to default. */
                 R_UNLESS(R_SUCCEEDED(WriteAlarmTime(alarm_id, DisabledAlarmTime)), ResultAlarmAccessFailed());
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result GetTimeInSeconds(u64 *out_time) {
@@ -472,7 +472,7 @@ namespace ams::pcv::rtc {
 
                 *out_time = ((static_cast<s64>(days) * HoursPerDay + hour) * MinutesPerHour + minute) * SecondsPerMinute + second;
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result SetTimeInSeconds(u64 in_seconds) {
@@ -481,7 +481,7 @@ namespace ams::pcv::rtc {
                 /* Set the time. */
                 R_UNLESS(R_SUCCEEDED(SetTime(std::addressof(time))), ResultRtcAccessFailed());
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result SetUpResetOnShutdown() {
@@ -512,13 +512,13 @@ namespace ams::pcv::rtc {
                 data = Max77620RtcControlMUnmaskAll;
                 R_TRY(WriteRtcRegisters(Max77620RtcControlMReg, 1, std::addressof(data)));
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result SetResetOnShutdown(u8 do_reset) {
                 m_reset_on_shutdown = do_reset;
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result GetResetDetected(u8 *reset_detected) {
@@ -526,7 +526,7 @@ namespace ams::pcv::rtc {
 
                 *reset_detected = GetExternalRtcResetFlag();
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result ClearResetDetected() {
@@ -536,7 +536,7 @@ namespace ams::pcv::rtc {
 
                 R_ABORT_UNLESS(!flag);
 
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             Result ApplyResetOnShutdownIfFlagged() {

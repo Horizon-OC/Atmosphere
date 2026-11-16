@@ -98,7 +98,7 @@ namespace ams::pcv::rtc {
         /* NOTE: Nintendo does more linked list linking crap here. */
         /* But this is *kinda* not needed. */
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     RtcDevice &GetRtcDevice() {

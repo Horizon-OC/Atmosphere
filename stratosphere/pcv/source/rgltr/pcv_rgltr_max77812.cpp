@@ -89,7 +89,7 @@ namespace ams::pcv::rgltr {
         /* Update the voltage. */
         regulator.dvfs_pmic.volt_code = volt_code;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result GetVoltageMax77812(u32 idx, u32 &out_micro_volts) {
@@ -118,7 +118,7 @@ namespace ams::pcv::rgltr {
         regulator.dvfs_pmic.volt_code = vout_value;
         out_micro_volts = GetVoltageFromCode(regulator, vout_value);
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result EnableMax77812(u32 idx) {
@@ -132,7 +132,7 @@ namespace ams::pcv::rgltr {
 
         /* Already enabled. */
         if (regulator.enable_count++ != 0) {
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         /* Reread */
@@ -165,7 +165,7 @@ namespace ams::pcv::rgltr {
             R_DISCARD(I2cRead(*regulator.session, Max77812EnCtrlReg, enabled));
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     bool FinalizeMax77812(u32 idx) {

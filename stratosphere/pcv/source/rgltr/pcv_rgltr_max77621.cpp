@@ -59,7 +59,7 @@ namespace ams::pcv::rgltr {
 
         regulator.dvfs_pmic.volt_code = volt_code;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result EnableMax77621(u32 idx) {
@@ -67,7 +67,7 @@ namespace ams::pcv::rgltr {
 
         /* Only the first reference actually enables the regulator. */
         if (regulator.enable_count++ != 0) {
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         /* Enable. */
@@ -82,7 +82,7 @@ namespace ams::pcv::rgltr {
             svc::SleepThread(static_cast<s64>(1000) * regulator.enable_delay_us);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     bool FinalizeMax77621(u32 idx) {

@@ -55,7 +55,7 @@ namespace ams::pcv::gpio {
 
         FinalizeDevice(handle->device_index);
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result ReadAlternateMode(DeviceHandle *handle) {
@@ -72,7 +72,7 @@ namespace ams::pcv::gpio {
             return I2cRead(*device.session, device.ame_reg, out);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result GetDirection(DeviceHandle *handle, GpioDirection &direction) {
@@ -87,7 +87,7 @@ namespace ams::pcv::gpio {
             direction = static_cast<GpioDirection>((out & Max77620PmicGpioDirMask) >> Max77620PmicGpioDirShift);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result SetDirection(DeviceHandle *handle, GpioDirection direction) {
@@ -109,7 +109,7 @@ namespace ams::pcv::gpio {
             return I2cWrite(*device.session, device.gpio_cfg_reg, reg_value);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result GetDriveMode(DeviceHandle *handle, GpioDriveMode &mode) {
@@ -124,7 +124,7 @@ namespace ams::pcv::gpio {
             mode = static_cast<GpioDriveMode>(out & Max77620PmicGpioDrvMask);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result SetDriveMode(DeviceHandle *handle, GpioDriveMode mode) {
@@ -146,7 +146,7 @@ namespace ams::pcv::gpio {
             return I2cWrite(*device.session, device.gpio_cfg_reg, reg_value);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result GetPullState(DeviceHandle *handle, GpioPullState &out_state) {
@@ -184,7 +184,7 @@ namespace ams::pcv::gpio {
             }
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result GetOutputValue(DeviceHandle *handle, u8 &output_value) {
@@ -198,7 +198,7 @@ namespace ams::pcv::gpio {
             output_value = (reg_value & Max77620PmicGpioOutputValMask) >> Max77620PmicGpioOutputValShift;
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result SetOutputValue(DeviceHandle *handle, u8 output_value) {
@@ -218,7 +218,7 @@ namespace ams::pcv::gpio {
             R_TRY(I2cWrite(*device.session, device.gpio_cfg_reg, reg_value));
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
 }

@@ -98,7 +98,7 @@ namespace ams::pcv::bpc {
     Result PowerManager::SetWakeAlarm(bool enable, bool force) {
         /* Is the wake alarm already enabled? */
         if (!force && m_wake_alarm_enabled == enable) {
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         if (!enable) {
@@ -106,7 +106,7 @@ namespace ams::pcv::bpc {
             R_TRY(rtc::GetRtcDevice().DisableAlarm(1));
 
             m_wake_alarm_enabled = enable;
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         /* We're enabling the alarm. */
@@ -119,7 +119,7 @@ namespace ams::pcv::bpc {
         R_TRY(rtc::GetRtcDevice().EnableAlarm(1, alarm_time));
 
         m_wake_alarm_enabled = enable;
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     void PowerManager::StopSleepTimerAndDisarmWakeAlarm() {
@@ -466,7 +466,7 @@ namespace ams::pcv::bpc {
 
         *out_ok = (on_off_state & Max77620PmicOnOffStatAcOkMask) != 0;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result PowerManager::GetPowerEvent(os::SystemEventType **out_event, u32 target) {
@@ -477,7 +477,7 @@ namespace ams::pcv::bpc {
             *out_event = std::addressof(m_ac_ok_system_event);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result PowerManager::GetPowerButtonEvent(os::SystemEventType **out_event, u32 target) {
@@ -488,7 +488,7 @@ namespace ams::pcv::bpc {
             *out_event = std::addressof(m_power_button_system_event);
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result PowerManager::GetPowerButton(bool *out_is_pushed) {
@@ -499,7 +499,7 @@ namespace ams::pcv::bpc {
 
         *out_is_pushed = (on_off_state & Max77620PmicOnOffStatEn0Mask) != 0;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     void PowerManager::SetUpRtcResetOnShutdown() {

@@ -81,7 +81,7 @@ namespace ams::pcv::bpc {
 
         m_rtc_callback = callback;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result IrqDevice::SetOnOffCallback(IrqCallbackFn callback) {
@@ -89,7 +89,7 @@ namespace ams::pcv::bpc {
 
         m_on_off_callback = callback;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     void IrqDevice::CleanupInterruptGlblm() {
@@ -110,7 +110,7 @@ namespace ams::pcv::bpc {
 
         m_saved_int_en_lbt = int_en_lbt;
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result IrqDevice::HandleGlobalPendingInterrupts(u8 irq_top) {
@@ -121,7 +121,7 @@ namespace ams::pcv::bpc {
             R_TRY(I2cRead(m_pmic_session, Max77620PmicIntLbtReg, int_lbt));
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result IrqDevice::HandleRtcPendingInterrupts(u8 irq_top, u32 &rtc_flags) {
@@ -146,7 +146,7 @@ namespace ams::pcv::bpc {
             if (pending & rtc::Max77620RtcIrqBit2Mask) { rtc_flags |= rtc::Max77620RtcFlagFromBit2; }
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result IrqDevice::HandleOnOffPendingInterrupts(u8 irq_top, u32 &on_off_flags) {
@@ -159,7 +159,7 @@ namespace ams::pcv::bpc {
             on_off_flags = on_off_irq & ~on_off_mask;
         }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
     Result IrqDevice::HandleInterrupt() {
@@ -189,7 +189,7 @@ namespace ams::pcv::bpc {
         if (rtc_flags    && m_rtc_callback)    { m_rtc_callback(rtc_flags); }
         if (on_off_flags && m_on_off_callback) { m_on_off_callback(on_off_flags); }
 
-        return ResultSuccess();
+        R_SUCCEED();
     }
 
 }

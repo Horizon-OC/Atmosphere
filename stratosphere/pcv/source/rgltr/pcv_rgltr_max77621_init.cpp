@@ -44,14 +44,14 @@ namespace ams::pcv::rgltr {
 
             if (!regulator.enable_count) {
                 /* Already disabled */
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             --regulator.enable_count;
 
             /* Nothing more needs to be done. */
             if (regulator.enable_count) {
-                return ResultSuccess();
+                R_SUCCEED();
             }
 
             /* We need to disable vout entirely. */
@@ -65,7 +65,7 @@ namespace ams::pcv::rgltr {
                 svc::SleepThread(static_cast<u64>(1000) * regulator.disable_delay_us);
             }
 
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         Result SetupDirection(Regulator &regulator) {
@@ -197,7 +197,7 @@ namespace ams::pcv::rgltr {
 
             regulator.ramp_rate_uv_per_us = ramp.uv_per_us;
 
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
     }
