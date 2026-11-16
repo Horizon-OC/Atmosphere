@@ -29,8 +29,12 @@ namespace ams::pcv::rgltr {
             return IsVoltageInRange(voltage, regulator.main_pmic.default_uv, regulator.main_pmic.max_uv);
         }
 
-        u32 GetVoltCode(const Regulator &regulator, u32 voltage) {
+        u8 GetVoltCode(const Regulator &regulator, u32 voltage) {
             return GetVoltCodeImpl(voltage, regulator.main_pmic.min_uv, regulator.main_pmic.step_uv);
+        }
+
+        u32 GetVoltageFromCode(const Regulator &regulator, u8 volt_code) {
+            return GetVoltageFromCodeImpl(volt_code, regulator.main_pmic.min_uv, regulator.main_pmic.step_uv);
         }
 
         void VoltageTimeout(const Regulator &regulator, u32 volt_code) {
@@ -55,16 +59,34 @@ namespace ams::pcv::rgltr {
 
         /* Set the voltage. */
         u8 volt_reg;
-        R_TRY(I2cRead(*regulator.session, regulator.volt_reg_byte, volt_reg));
+        R_TRY(I2cRead(*regulator.session, regulator.volt_reg, volt_reg));
         volt_reg = (volt_reg & ~regulator.voltage_mask) | (regulator.voltage_mask & volt_code);
 
-        R_TRY(I2cWrite(*regulator.session, regulator.volt_reg_byte, volt_reg));
+        R_TRY(I2cWrite(*regulator.session, regulator.volt_reg, volt_reg));
         VoltageTimeout(regulator, volt_code);
 
         /* Update voltage. */
         regulator.main_pmic.volt_code = static_cast<u8>(volt_code);
 
         R_SUCCEED();
+    }
+
+    Result GetVoltageMax77620(u32 idx, u32 &micro_volts) {
+        Regulator &regulator = GetRegulator(idx);
+
+        u8 vout;
+        R_TRY(I2cRead(*regulator.session, regulator.volt_reg, vout));
+        u8 volt_code = vout & regulator.voltage_mask;
+
+        micro_volts = GetVoltageFromCode(regulator, volt_code);
+
+        R_SUCCEED();
+    }
+
+    u32 GetCachedVoltageMax77620(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        return GetVoltageFromCode(regulator, regulator.main_pmic.volt_code);
     }
 
     bool FinalizeMax77620(u32 idx) {

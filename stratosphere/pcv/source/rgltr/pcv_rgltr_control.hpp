@@ -21,5 +21,11 @@
 namespace ams::pcv::rgltr {
 
     Result SetVoltage(PowerDomain *domain, u32 micro_volts);
+    Result GetVoltage(PowerDomain *domain, u32 &micro_volts);
+    Result GetCachedVoltage(PowerDomain *domain, u32 &micro_volts);
     Result EnablePowerDomain(PowerDomain *domain);
+    Result IsPowerDomainEnabled(PowerDomain *domain, bool &enabled);
+    Result GetStateTable(PowerDomainState *state, s32 *out_count, s32 max_count);
+    s32 GetStateTableCount();
+
 }

@@ -106,7 +106,7 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
         /* If we're not power bus, perform power management init. */
         if (!m_is_power_bus) {
             /* Initialize regulator library. */
-            regulator::Initialize();
+            pcv::rgltr::Initialize();
 
             /* Try to open regulator session. */
             R_TRY(this->TryOpenRegulatorSession());
@@ -114,7 +114,7 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
             /* If we have a regulator session, set voltage to 2.9V. */
             if (m_has_regulator_session) {
                 /* NOTE: Nintendo does not check the result, here. */
-                R_DISCARD(regulator::SetVoltageValue(std::addressof(m_regulator_session), 2'900'000u));
+                R_DISCARD(pcv::rgltr::SetVoltageValue(std::addressof(m_regulator_session), 2'900'000u));
             }
 
             /* Initialize clock/reset library. */
@@ -127,10 +127,10 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
         /* If we have a regulator session, enable voltage. */
         if (!m_is_power_bus && m_has_regulator_session) {
             /* Check whether voltage was already enabled. */
-            const bool was_enabled = regulator::GetVoltageEnabled(std::addressof(m_regulator_session));
+            const bool was_enabled = pcv::rgltr::GetVoltageEnabled(std::addressof(m_regulator_session));
 
             /* NOTE: Nintendo does not check the result of this call. */
-            R_DISCARD(regulator::SetVoltageEnabled(std::addressof(m_regulator_session), true));
+            R_DISCARD(pcv::rgltr::SetVoltageEnabled(std::addressof(m_regulator_session), true));
 
             /* If we enabled voltage, delay to give our enable time to take. */
             if (!was_enabled) {
@@ -163,7 +163,7 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
         /* If we have a regulator session, disable voltage. */
         if (m_has_regulator_session) {
             /* NOTE: Nintendo does not check the result of this call. */
-            R_DISCARD(regulator::SetVoltageEnabled(std::addressof(m_regulator_session), false));
+            R_DISCARD(pcv::rgltr::SetVoltageEnabled(std::addressof(m_regulator_session), false));
         }
 
         /* Finalize the clock/reset library. */
@@ -171,12 +171,12 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
 
         /* If we have a regulator session, close it. */
         if (m_has_regulator_session) {
-            regulator::CloseSession(std::addressof(m_regulator_session));
+            pcv::rgltr::CloseSession(std::addressof(m_regulator_session));
             m_has_regulator_session = false;
         }
 
         /* Finalize the regulator library. */
-        regulator::Finalize();
+        pcv::rgltr::Finalize();
     }
 
     Result I2cBusAccessor::Send(I2cDeviceProperty *device, const void *src, size_t src_size, TransactionOption option) {
@@ -233,7 +233,7 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
 
             /* Disable voltage. */
             if (m_has_regulator_session) {
-                R_DISCARD(regulator::SetVoltageEnabled(std::addressof(m_regulator_session), false));
+                R_DISCARD(pcv::rgltr::SetVoltageEnabled(std::addressof(m_regulator_session), false));
             }
         }
 
@@ -269,10 +269,10 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
             /* Enable voltage. */
             if (m_has_regulator_session) {
                 /* Check whether voltage was already enabled. */
-                const bool was_enabled = regulator::GetVoltageEnabled(std::addressof(m_regulator_session));
+                const bool was_enabled = pcv::rgltr::GetVoltageEnabled(std::addressof(m_regulator_session));
 
                 /* NOTE: Nintendo does not check the result of this call. */
-                R_DISCARD(regulator::SetVoltageEnabled(std::addressof(m_regulator_session), true));
+                R_DISCARD(pcv::rgltr::SetVoltageEnabled(std::addressof(m_regulator_session), true));
 
                 /* If we enabled voltage, delay to give our enable time to take. */
                 if (!was_enabled) {
@@ -311,7 +311,7 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
         auto s_guard = SCOPE_GUARD { m_has_regulator_session = false; };
 
         /* Try to open the session. */
-        R_TRY_CATCH(regulator::OpenSession(std::addressof(m_regulator_session), m_device_code)) {
+        R_TRY_CATCH(pcv::rgltr::OpenSession(std::addressof(m_regulator_session), m_device_code)) {
             R_CATCH(ddsf::ResultDeviceCodeNotFound) {
                 /* It's okay if the device isn't found, but we don't have a session if so. */
                 m_has_regulator_session = false;

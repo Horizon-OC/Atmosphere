@@ -24,11 +24,38 @@ namespace ams::pcv::rgltr {
             const char *m_name;
             DeviceCode m_device_code;
             os::SdkMutex m_mutex{};
+            s32 m_session_count{};
+            u32 m_voltage_cache_uv{};
+
+            bool m_enabled_cache_valid = false;
+            bool m_enabled_cache       = false;
+            bool m_voltage_cache_valid = false;
         public:
             constexpr PowerDomain(const char *name, DeviceCode code) : m_name(name), m_device_code(code) { /* ... */ }
 
             ALWAYS_INLINE constexpr const char *GetName()      const { return m_name; }
             ALWAYS_INLINE constexpr DeviceCode GetDeviceCode() const { return m_device_code; }
-    };
+        public:
+            void OnSessionOpened() {
+                std::scoped_lock lk(m_mutex);
 
+                ++m_session_count;
+            }
+
+            void OnSessionClosed() {
+                std::scoped_lock lk(m_mutex);
+                AMS_ASSERT(m_session_count > 0);
+                --m_session_count;
+            }
+
+            bool HasOpenSessions() {
+                std::scoped_lock lk(m_mutex);
+                return m_session_count > 0;
+            }
+        public:
+            Result IsEnabledCacheValid(bool &enabled);
+            Result IsEnabled(bool &enabled);
+            Result GetCachedVoltage(u32 &micro_volts);
+            Result GetVoltage(u32 &micro_volts);
+    };
 }

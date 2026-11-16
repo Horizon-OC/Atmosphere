@@ -21,6 +21,9 @@ R_DEFINE_NAMESPACE_RESULT_MODULE(ams::pcv::rgltr, 192);
 
 namespace ams::pcv::rgltr {
 
-    R_DEFINE_ERROR_RESULT(InvalidArgument, 2);
+    R_DEFINE_ERROR_RESULT(InvalidArgument,    2);
+    R_DEFINE_ERROR_RESULT(InsufficientBuffer, 6);
+
+    R_DEFINE_ERROR_RESULT(InvalidCache, 201);
 
 }

@@ -134,4 +134,7 @@ namespace ams::pcv {
         PcvPowerDomainId_Max77812_Dram = 0x3A000005, /* Vddq. */
     };
 
+    /* Up to 64 is technically supported. */
+    constexpr inline size_t MaxLutSize = 33;
+
 }

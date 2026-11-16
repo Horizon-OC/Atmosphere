@@ -116,9 +116,17 @@ namespace ams::pcv::rgltr {
         }
 
         regulator.dvfs_pmic.volt_code = vout_value;
+
         out_micro_volts = GetVoltageFromCode(regulator, vout_value);
 
         R_SUCCEED();
+    }
+
+    /* Todo move this in some common file. */
+    u32 GetCachedVoltageDvfsPmic(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        return GetVoltageFromCode(regulator, regulator.dvfs_pmic.volt_code);
     }
 
     Result EnableMax77812(u32 idx) {
@@ -164,6 +172,23 @@ namespace ams::pcv::rgltr {
             u8 enabled;
             R_DISCARD(I2cRead(*regulator.session, Max77812EnCtrlReg, enabled));
         }
+
+        R_SUCCEED();
+    }
+
+    Result IsEnabledMax77812(u32 idx, bool &enabled) {
+        Regulator &regulator = GetRegulator(idx);
+
+        {
+            /* read twice once again */
+            u8 discarded;
+            R_TRY(I2cRead(*regulator.session, Max77812EnCtrlReg, discarded));
+        }
+
+        u8 ctrl_reg;
+        R_TRY(I2cRead(*regulator.session, Max77812EnCtrlReg, ctrl_reg));
+
+        enabled = ctrl_reg & regulator.master_en_mask;
 
         R_SUCCEED();
     }

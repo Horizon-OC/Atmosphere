@@ -22,6 +22,7 @@
 #include "bpc/pcv_bpc_service.hpp"
 
 #include "rgltr/pcv_rgltr.hpp"
+#include "rgltr/pcv_rgltr_manager.hpp"
 
 #include "pcv_service/pcv_service_fuse.hpp"
 #include "pcv_service/pcv_service.hpp"
@@ -86,6 +87,35 @@ namespace ams {
             void StartServer() {
                 R_ABORT_UNLESS(os::CreateThread(std::addressof(g_thread), ThreadFunction, nullptr, g_thread_stack, sizeof(g_thread_stack), AMS_GET_SYSTEM_THREAD_PRIORITY(pcv, BpcIpcServer)));
                 os::SetThreadNamePointer(std::addressof(g_thread), AMS_GET_SYSTEM_THREAD_NAME(pcv, BpcIpcServer));
+                os::StartThread(std::addressof(g_thread));
+            }
+
+        }
+
+        namespace rgltr {
+
+            namespace {
+                constexpr sm::ServiceName RgltrServiceName = sm::ServiceName::Encode("rgltr");
+                constexpr size_t          RgltrMaxSessions = 30;
+
+                sf::hipc::ServerManager<1, sf::hipc::DefaultServerManagerOptions, RgltrMaxSessions> g_server_manager;
+                sf::UnmanagedServiceObject<IRgltrManager, RgltrManager> g_rgltr_service;
+
+                alignas(os::ThreadStackAlignment) constinit u8 g_thread_stack[0x2000];
+                constinit os::ThreadType g_thread;
+
+                void ThreadFunction(void *) {
+                    g_server_manager.LoopProcess();
+                }
+            }
+
+            void InitializeServer() {
+                R_ABORT_UNLESS(g_server_manager.RegisterObjectForServer(g_rgltr_service.GetShared(), RgltrServiceName, RgltrMaxSessions));
+            }
+
+            void StartServer() {
+                R_ABORT_UNLESS(os::CreateThread(std::addressof(g_thread), ThreadFunction, nullptr, g_thread_stack, sizeof(g_thread_stack), AMS_GET_SYSTEM_THREAD_PRIORITY(pcv, RgltrIpcServer)));
+                os::SetThreadNamePointer(std::addressof(g_thread), AMS_GET_SYSTEM_THREAD_NAME(pcv, RgltrIpcServer));
                 os::StartThread(std::addressof(g_thread));
             }
 
@@ -165,6 +195,8 @@ namespace ams {
 
         /* Initialize rgltr */
         pcv::rgltr::Initialize();
+        pcv::rgltr::InitializeServer();
+        pcv::rgltr::StartServer();
 
         /* Initialize pcv services. */
         pcv::detail::InitializeFuseInfo();

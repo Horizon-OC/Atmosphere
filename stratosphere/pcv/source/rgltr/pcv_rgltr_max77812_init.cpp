@@ -243,7 +243,7 @@ namespace ams::pcv::rgltr {
             g_slew.start_per_us = SlewUvPerUs[start_slew_code];
             g_slew.shdn_per_us  = SlewUvPerUs[shdn_slew_code];
 
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         Result ConfigureRamp() {
@@ -257,7 +257,7 @@ namespace ams::pcv::rgltr {
             g_slew.ramp_up_per_us   = SlewUvPerUs[ramp_up_code];
             g_slew.ramp_down_per_us = SlewUvPerUs[ramp_down_code];
 
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         void SetupDvfsPhases() {

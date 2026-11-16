@@ -15,7 +15,7 @@
  */
 #include <stratosphere.hpp>
 
-namespace ams::regulator {
+namespace ams::pcv::rgltr {
 
     void Initialize() {
         /* ... */

@@ -105,7 +105,7 @@ namespace ams::pcv::rgltr {
         }
 
         u8 GetEnableRegister(Regulator &reg) {
-            return reg.is_ldo ? reg.volt_reg_byte : reg.config_reg;
+            return reg.is_ldo ? reg.volt_reg : reg.config_reg;
         }
 
         Result ReadEnabledRegister(u32 idx, u32 *enabled) {
@@ -248,7 +248,7 @@ namespace ams::pcv::rgltr {
             Regulator &regulator = GetRegulator(idx);
 
             u8 out_volt;
-            R_TRY(I2cRead(*regulator.session, regulator.volt_reg_byte, out_volt));
+            R_TRY(I2cRead(*regulator.session, regulator.volt_reg, out_volt));
 
             /* Get the voltage code. */
             u32 volt_code = out_volt & regulator.voltage_mask;
@@ -553,6 +553,22 @@ namespace ams::pcv::rgltr {
         }
 
         return result;
+    }
+
+    Result IsEnabledMax77620(u32 idx, bool &enabled) {
+        Regulator &regulator = GetRegulator(idx);
+
+        /* Only the first regulator can be forced on. */
+        if (idx == 0 && regulator.forced_on) {
+            enabled = true;
+            return ResultSuccess();
+        }
+
+        u32 enabled_register;
+        R_TRY(ReadEnabledRegister(idx, std::addressof(enabled_register)));
+
+        enabled = enabled_register != 0;
+        R_SUCCEED();
     }
 
 }

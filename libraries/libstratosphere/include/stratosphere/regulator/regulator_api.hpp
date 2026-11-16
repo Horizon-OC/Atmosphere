@@ -17,7 +17,7 @@
 #include <vapours.hpp>
 #include <stratosphere/regulator/regulator_types.hpp>
 
-namespace ams::regulator {
+namespace ams::pcv::rgltr {
 
     void Initialize();
     void Finalize();

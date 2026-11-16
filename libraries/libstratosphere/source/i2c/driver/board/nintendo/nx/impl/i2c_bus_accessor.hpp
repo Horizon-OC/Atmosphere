@@ -43,7 +43,7 @@ namespace ams::i2c::driver::board::nintendo::nx::impl {
             int m_user_count;
             os::SdkMutex m_user_count_mutex;
             os::SdkMutex m_register_mutex;
-            regulator::RegulatorSession m_regulator_session;
+            pcv::rgltr::RegulatorSession m_regulator_session;
             bool m_has_regulator_session;
             State m_state;
             os::SdkMutex m_transaction_order_mutex;

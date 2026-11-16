@@ -24,12 +24,19 @@
 #include "pcv_rgltr_max77620.hpp"
 #include "pcv_rgltr_max77621.hpp"
 #include "pcv_rgltr_max77812.hpp"
+#include "pcv_rgltr_common_volt.hpp"
 
 namespace ams::pcv::rgltr {
 
     namespace {
 
+        /* NOTE: Nvidia may return failure on all IsRegulatorOpen here, but the caller allows this specific function to fail and just returns ResultSuccess. */
+
         Result SetVoltageImpl(u32 idx, u32 micro_volts) {
+            if (!IsRegulatorOpen(idx)) {
+                R_SUCCEED();
+            }
+
             Regulator &regulator = GetRegulator(idx);
             switch (regulator.type) {
                 case PmicType_Main:        R_RETURN(SetVoltageMax77620(idx, micro_volts));
@@ -39,7 +46,39 @@ namespace ams::pcv::rgltr {
             }
         }
 
+        Result GetVoltageImpl(u32 idx, u32 &micro_volts) {
+            if (!IsRegulatorOpen(idx)) {
+                R_SUCCEED();
+            }
+
+            Regulator &regulator = GetRegulator(idx);
+            switch (regulator.type) {
+                case PmicType_Main:        R_RETURN(GetVoltageMax77620(idx, micro_volts));
+                case PmicType_Erista_Dvfs: R_RETURN(GetVoltageMax77621(idx, micro_volts));
+                case PmicType_Mariko_Dvfs: R_RETURN(GetVoltageMax77812(idx, micro_volts));
+                default:                   AMS_ABORT();
+            }
+        }
+
+        u32 GetCachedVoltageImpl(u32 idx) {
+            if (!IsRegulatorOpen(idx)) {
+                return -1;
+            }
+
+            Regulator &regulator = GetRegulator(idx);
+            switch (regulator.type) {
+                case PmicType_Main: return GetCachedVoltageMax77620(idx);
+                case PmicType_Erista_Dvfs:
+                case PmicType_Mariko_Dvfs: return GetCachedVoltageDvfsPmic(idx);
+                default: return -1;
+            }
+        }
+
         Result EnablePowerDomainImpl(u32 idx) {
+            if (!IsRegulatorOpen(idx)) {
+                R_SUCCEED();
+            }
+
             Regulator &regulator = GetRegulator(idx);
             switch (regulator.type) {
                 case PmicType_Main:        R_RETURN(EnableMax77620(idx));
@@ -47,6 +86,53 @@ namespace ams::pcv::rgltr {
                 case PmicType_Mariko_Dvfs: R_RETURN(EnableMax77812(idx));
                 default:                   AMS_ABORT();
             }
+        }
+
+        Result IsPowerDomainEnabledImpl(u32 idx, bool &enabled) {
+            if (!IsRegulatorOpen(idx)) {
+                R_SUCCEED();
+            }
+
+            Regulator &regulator = GetRegulator(idx);
+            switch (regulator.type) {
+                case PmicType_Main:        R_RETURN(IsEnabledMax77620(idx, enabled));
+                case PmicType_Erista_Dvfs: R_RETURN(IsEnabledMax77621(idx, enabled));
+                case PmicType_Mariko_Dvfs: R_RETURN(IsEnabledMax77812(idx, enabled));
+                default:                   AMS_ABORT();
+            }
+        }
+
+        constinit DeviceCode g_state_table_domains[] = {
+            PcvPowerDomainId_Max77620_Sd0,
+            PcvPowerDomainId_Max77621_Cpu,
+            PcvPowerDomainId_Max77812_Gpu,
+        };
+        static_assert(util::size(g_state_table_domains) == 3);
+
+        bool IsCpuRegulator(const char *name) {
+            constexpr const char *CpuName = "max77621_cpu";
+            return strcmp(name, CpuName) == 0;
+        }
+
+        u32 ReadLutVoltage(PowerDomain *domain) {
+            uintptr_t mapping = GetDvfsMappings();
+            constexpr u32 ClDvfsI2cStatus = 0x48;
+            constexpr u32 LastI2cStatusValueStatusShift = 1;
+            constexpr u32 LastI2cStatusValueStatusMask  = 0x3F;
+            constexpr u32 DlDvfsI2cLutOffset            = 0x200;
+
+            u32 status = *reinterpret_cast<u32 *>(mapping + ClDvfsI2cStatus);
+            u32 lut_idx = (status >> LastI2cStatusValueStatusShift) & LastI2cStatusValueStatusMask;
+
+            u32 voltage = 0;
+            if (lut_idx < MaxLutSize) {
+                u8 code = static_cast<u8>(*reinterpret_cast<u32 *>(mapping + DlDvfsI2cLutOffset + lut_idx * sizeof(u32)));
+
+                Regulator &regulator = GetRegulator(*domain);
+                voltage = GetVoltageFromCodeImpl(code, regulator.dvfs_pmic.min_uv, regulator.dvfs_pmic.step_uv);
+            }
+
+            return voltage;
         }
 
     }
@@ -67,6 +153,46 @@ namespace ams::pcv::rgltr {
         R_RETURN(result);
     }
 
+    Result GetVoltage(PowerDomain *domain, u32 &micro_volts) {
+        R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        /* Initialize handle */
+        DeviceHandle handle;
+        if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
+            R_SUCCEED();
+        }
+
+        /* Get The voltage if it's open */
+        const Result result = GetVoltageImpl(handle.device_index, micro_volts);
+        FinalizeHandle(std::addressof(handle));
+
+        R_RETURN(result);
+    }
+
+    Result GetCachedVoltage(PowerDomain *domain, u32 &micro_volts) {
+        R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        if (IsCpuRegulator(domain->GetName())) {
+            /* For cpu: read the voltage from lut. */
+            micro_volts = ReadLutVoltage(domain);
+            R_SUCCEED();
+        }
+        /* For anything else read the cached voltage. */
+
+        /* Initialize handle */
+        DeviceHandle handle;
+        /* Note nintendo does not check if this succeeds */
+        InitializeHandleByName(std::addressof(handle), domain->GetName());
+
+        /* Read the cached voltage */
+        micro_volts = GetCachedVoltageImpl(handle.device_index);
+
+        /* Finalize */
+        FinalizeHandle(std::addressof(handle));
+
+        R_SUCCEED();
+    }
+
     Result EnablePowerDomain(PowerDomain *domain) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
 
@@ -83,6 +209,72 @@ namespace ams::pcv::rgltr {
         FinalizeHandle(std::addressof(handle));
 
         R_RETURN(result);
+    }
+
+    Result IsPowerDomainEnabled(PowerDomain *domain, bool &enabled) {
+        R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+         /* Initialize handle */
+        DeviceHandle handle;
+        if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
+            R_SUCCEED();
+        }
+
+        const Result result = IsPowerDomainEnabledImpl(handle.device_index, enabled);
+
+        /* Finalize them. */
+        FinalizeHandle(std::addressof(handle));
+
+        R_RETURN(result);
+    }
+
+    s32 GetStateTableCount() {
+        return static_cast<s32>(util::size(g_state_table_domains));
+    }
+
+    Result GetStateTable(PowerDomainState *state, s32 *out_count, s32 max_count) {
+        R_UNLESS(max_count >= GetStateTableCount(), ResultInsufficientBuffer());
+
+        s32 i = 0;
+        for (; i < GetStateTableCount(); ++i) {
+            const auto device_code = g_state_table_domains[i];
+            state[i].device_code = device_code;
+
+            PowerDomain *domain = FindPowerDomain(device_code);
+            AMS_ASSERT(domain != nullptr);
+
+            if (device_code == PcvPowerDomainId_Max77621_Gpu) {
+                R_TRY(IsPowerDomainEnabled(domain, state[i].enabled));
+                R_TRY(GetCachedVoltage(domain, state[i].voltage));
+            } else if (device_code == PcvPowerDomainId_Max77621_Cpu) {
+                /* Cpu always reads lut. */
+                state[i].enabled = true;
+                R_TRY(GetCachedVoltage(domain, state[i].voltage));
+            } else {
+                /* Try to read enabled flag through cache, read power domains on invalid cache. */
+                Result rc = domain->IsEnabledCacheValid(state[i].enabled);
+                if (R_FAILED(rc)) {
+                    R_UNLESS(ResultInvalidCache::Includes(rc), rc);
+                    R_TRY(domain->IsEnabled(state[i].enabled));
+                }
+
+                /* Same as with enabled, read voltage through cache first, perform actual fresh read on invalid cache. */
+                rc = domain->GetCachedVoltage(state[i].voltage);
+                if (R_FAILED(rc)) {
+                    R_UNLESS(ResultInvalidCache::Includes(rc), rc);
+
+                    rc = domain->GetVoltage(state[i].voltage);
+                    if (R_FAILED(rc)) {
+                        /* NOTE: Nintendo doesn't the voltage on 2192-0001 (0x2C0), but as far as I can tell this result is never thrown.*/
+                        R_UNLESS(rc.GetValue() == 0x2C0, rc);
+                        state[i].voltage = 0;
+                    }
+                }
+            }
+        }
+
+        *out_count = i;
+        R_SUCCEED();
     }
 
 }

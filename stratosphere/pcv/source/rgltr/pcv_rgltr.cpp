@@ -31,6 +31,7 @@ namespace ams::pcv::rgltr {
         #include "pcv_rgltr_tables.inc"
 
         constinit Regulator *g_regulator_table = nullptr;
+        uintptr_t g_dvfs_mapping;
 
         constinit PowerDomain g_power_domains[] = {
             { "max77620_sd0",  PcvPowerDomainId_Max77620_Sd0,  },
@@ -69,21 +70,27 @@ namespace ams::pcv::rgltr {
         void RegisterPowerDomainTarget(PowerDomain &device) {
             switch (device.GetDeviceCode().GetInternalValue()) {
                 case PcvPowerDomainId_Max77620_Ldo3:
-                    g_domain_registry.Register(regulator::DeviceCode_GcCardPower3v1, std::addressof(device));
+                    g_domain_registry.Register(DeviceCode_GcCardPower3v1, std::addressof(device));
                     break;
                 case PcvPowerDomainId_Max77620_Ldo5:
-                    g_domain_registry.Register(regulator::DeviceCode_GcCardPower1v8, std::addressof(device));
+                    g_domain_registry.Register(DeviceCode_GcCardPower1v8, std::addressof(device));
                     break;
                 case PcvPowerDomainId_Max77620_Ldo6:
                     g_domain_registry.Register(i2c::DeviceCode_I2c2, std::addressof(device));
                     g_domain_registry.Register(i2c::DeviceCode_I2c3, std::addressof(device));
                     break;
                 case PcvPowerDomainId_Max77620_Ldo8:
-                    g_domain_registry.Register((GetHardwareType() == spl::HardwareType::Hoag) ? regulator::DeviceCode_SioMcuPower : regulator::DeviceCode_DisplayPortHdmiPower, std::addressof(device));
+                    g_domain_registry.Register((GetHardwareType() == spl::HardwareType::Hoag) ? DeviceCode_SioMcuPower : DeviceCode_DisplayPortHdmiPower, std::addressof(device));
                     break;
                 default:
                     break;
             }
+        }
+
+        void QueryDvfsMappings() {
+            constexpr dd::PhysicalAddress DvfsBase = 0x70110000;
+            constexpr size_t              DvfsSize = 0x400;
+            g_dvfs_mapping = dd::QueryIoMapping(DvfsBase, DvfsSize);
         }
 
         void InitializePowerDomains() {
@@ -159,6 +166,12 @@ namespace ams::pcv::rgltr {
             }
         }
 
+        u32 GetRegulatorIdxByDomain(const PowerDomain &domain) {
+            const auto idx = std::addressof(domain) - g_power_domains;
+            AMS_ABORT_UNLESS(0 <= idx && idx < static_cast<ptrdiff_t>(RegulatorCount));
+
+            return static_cast<u32>(idx);
+        }
     }
 
     RegulatorVariant GetRegulatorVariant() {
@@ -169,6 +182,9 @@ namespace ams::pcv::rgltr {
     }
 
     void Initialize() {
+        /* Query dvfs mappings. */
+        QueryDvfsMappings();
+
         /* Initialize all regulators. */
         InitializeRegulators();
 
@@ -194,6 +210,18 @@ namespace ams::pcv::rgltr {
         AMS_ABORT_UNLESS(idx < RegulatorCount);
 
         return g_regulator_table[idx];
+    }
+
+    Regulator &GetRegulator(const PowerDomain &domain) {
+        return GetRegulator(GetRegulatorIdxByDomain(domain));
+    }
+
+    PowerDomain *FindPowerDomain(DeviceCode device_code) {
+        return g_domain_registry.Find(device_code);
+    }
+
+    uintptr_t GetDvfsMappings() {
+        return g_dvfs_mapping;
     }
 
 }

@@ -16,6 +16,7 @@
 
 #pragma once
 #include <stratosphere.hpp>
+#include "pcv_rgltr_power_domain.hpp"
 #include "../gpio/pcv_gpio_handle.hpp"
 
 namespace ams::pcv::rgltr {
@@ -55,7 +56,7 @@ namespace ams::pcv::rgltr {
         };
 
         struct {
-            u8 volt_reg_byte;
+            u8 volt_reg;
             u8 config_reg;
             u8 voltage_mask;
             u8 enable_mask;
@@ -138,7 +139,10 @@ namespace ams::pcv::rgltr {
     void Initialize();
     void SetRegulatorTable(u8 cid4);
     Regulator &GetRegulator(u32 idx);
+    Regulator &GetRegulator(const PowerDomain &domain);
     RegulatorVariant GetRegulatorVariant();
+    PowerDomain *FindPowerDomain(DeviceCode device_code);
+    uintptr_t GetDvfsMappings();
 
     constexpr u32 Cid4Erista = 0x35;
     constexpr u32 Cid4Mariko = 0x53;

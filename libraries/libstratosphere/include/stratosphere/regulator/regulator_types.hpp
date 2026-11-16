@@ -16,7 +16,14 @@
 #pragma once
 #include <vapours.hpp>
 
-namespace ams::regulator {
+namespace ams::pcv::rgltr {
+
+    struct PowerDomainState {
+        DeviceCode device_code;
+        bool enabled;
+        u8 reserved[3];
+        u32 voltage;
+    };
 
     /* Power control targets. */
     constexpr inline const DeviceCode DeviceCode_GcCardPower3v1       = 0x3C000404; /* Ldo3 */
