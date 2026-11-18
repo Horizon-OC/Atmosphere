@@ -18,7 +18,7 @@
 #include "pcv_rgltr_session.hpp"
 #include "pcv_rgltr_manager.hpp"
 #include "pcv_rgltr.hpp"
-#include "pcv_rgltr_control.hpp"
+#include "pcv_rgltr_state_table.hpp"
 #include "pcv_rgltr_event.hpp"
 
 namespace ams::pcv::rgltr {

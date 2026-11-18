@@ -17,7 +17,7 @@
 #include <stratosphere.hpp>
 #include "pcv_rgltr_power_domain.hpp"
 #include "pcv_rgltr_session.hpp"
-#include "pcv_rgltr_control.hpp"
+#include "pcv_rgltr_state_table.hpp"
 #include "pcv_rgltr_event.hpp"
 
 namespace ams::pcv::rgltr {

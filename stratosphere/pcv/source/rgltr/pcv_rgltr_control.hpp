@@ -26,8 +26,5 @@ namespace ams::pcv::rgltr {
     Result EnablePowerDomain(PowerDomain *domain);
     Result IsPowerDomainEnabled(PowerDomain *domain, bool &enabled);
     Result DisablePowerDomain(PowerDomain *domain);
-    Result GetStateTable(PowerDomainState *state, s32 *out_count, s32 max_count);
-    s32 GetStateTableCount();
-    bool IsStateTableDevice(PowerDomain *domain);
 
 }

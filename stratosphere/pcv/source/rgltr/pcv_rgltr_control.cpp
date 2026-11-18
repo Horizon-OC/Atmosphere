@@ -115,13 +115,6 @@ namespace ams::pcv::rgltr {
             }
         }
 
-        constinit DeviceCode g_state_table_domains[] = {
-            PcvPowerDomainId_Max77620_Sd0,
-            PcvPowerDomainId_Max77621_Cpu,
-            PcvPowerDomainId_Max77812_Gpu,
-        };
-        static_assert(util::size(g_state_table_domains) == 3);
-
         bool IsCpuRegulator(const char *name) {
             constexpr const char *CpuName = "max77621_cpu";
             return strcmp(name, CpuName) == 0;
@@ -255,69 +248,6 @@ namespace ams::pcv::rgltr {
         FinalizeHandle(std::addressof(handle));
 
         R_RETURN(result);
-    }
-
-    s32 GetStateTableCount() {
-        return static_cast<s32>(util::size(g_state_table_domains));
-    }
-
-    bool IsStateTableDevice(PowerDomain *domain) {
-        if (domain == nullptr) {
-            return false;
-        }
-
-        for (const auto &code : g_state_table_domains) {
-            if (domain->GetDeviceCode() == code) {
-                return true;
-            }
-        }
-
-        return false;
-    }
-
-    Result GetStateTable(PowerDomainState *state, s32 *out_count, s32 max_count) {
-        R_UNLESS(max_count >= GetStateTableCount(), ResultInsufficientBuffer());
-
-        s32 i = 0;
-        for (; i < GetStateTableCount(); ++i) {
-            const auto device_code = g_state_table_domains[i];
-            state[i].device_code = device_code;
-
-            PowerDomain *domain = FindPowerDomain(device_code);
-            AMS_ASSERT(domain != nullptr);
-
-            if (device_code == PcvPowerDomainId_Max77621_Gpu) {
-                R_TRY(IsPowerDomainEnabled(domain, state[i].enabled));
-                R_TRY(GetCachedVoltage(domain, state[i].voltage));
-            } else if (device_code == PcvPowerDomainId_Max77621_Cpu) {
-                /* Cpu always reads lut. */
-                state[i].enabled = true;
-                R_TRY(GetCachedVoltage(domain, state[i].voltage));
-            } else {
-                /* Try to read enabled flag through cache, read power domains on invalid cache. */
-                Result rc = domain->IsEnabledCacheValid(state[i].enabled);
-                if (R_FAILED(rc)) {
-                    R_UNLESS(ResultInvalidCache::Includes(rc), rc);
-                    R_TRY(domain->IsEnabled(state[i].enabled));
-                }
-
-                /* Same as with enabled, read voltage through cache first, perform actual fresh read on invalid cache. */
-                rc = domain->GetCachedVoltage(state[i].voltage);
-                if (R_FAILED(rc)) {
-                    R_UNLESS(ResultInvalidCache::Includes(rc), rc);
-
-                    rc = domain->GetVoltage(state[i].voltage);
-                    if (R_FAILED(rc)) {
-                        /* NOTE: Nintendo doesn't the voltage on 2192-0001 (0x2C0), but as far as I can tell this result is never thrown.*/
-                        R_UNLESS(rc.GetValue() == 0x2C0, rc);
-                        state[i].voltage = 0;
-                    }
-                }
-            }
-        }
-
-        *out_count = i;
-        R_SUCCEED();
     }
 
 }
