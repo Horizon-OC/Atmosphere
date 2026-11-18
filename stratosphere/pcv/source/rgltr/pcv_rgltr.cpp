@@ -21,6 +21,7 @@
 #include "pcv_rgltr_max77812_init.hpp"
 #include "pcv_rgltr_power_domain.hpp"
 #include "pcv_rgltr_control.hpp"
+#include "pcv_rgltr_event.hpp"
 #include "../pcv_device_registry.hpp"
 #include "../pcv_hardware_type.hpp"
 

@@ -112,6 +112,33 @@ namespace ams::pcv::rgltr {
         R_SUCCEED();
     }
 
+    Result DisableMax77621(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        if (!regulator.enable_count) {
+            /* Already disabled */
+            R_SUCCEED();
+        }
+
+        if (--regulator.enable_count) {
+            /* Still enabled, nothing left to do. */
+            R_SUCCEED();
+        }
+
+        /* We need to disable it. */
+        /* Read vout. */
+        u8 vout;
+        R_TRY(I2cRead(*regulator.session, Max77621VoutReg, vout));
+
+        /* Disable it. */
+        vout &= Max77621DvcDvsVoltMask;
+        R_TRY(I2cWrite(*regulator.session, Max77621VoutReg, vout));
+
+        SleepForRamp(regulator.disable_delay_us);
+
+        R_SUCCEED();
+    }
+
     bool FinalizeMax77621(u32 idx) {
         Regulator &regulator = GetRegulator(idx);
 

@@ -19,6 +19,7 @@
 #include "pcv_rgltr_manager.hpp"
 #include "pcv_rgltr.hpp"
 #include "pcv_rgltr_control.hpp"
+#include "pcv_rgltr_event.hpp"
 
 namespace ams::pcv::rgltr {
 
@@ -54,8 +55,9 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrManager::GetRegulatorStateTableUpdateEvent(sf::OutCopyHandle out_event) {
-        AMS_UNUSED(out_event);
-        AMS_ABORT("TODO");
+        /* Unmanaged handle. */
+        out_event.SetValue(os::GetReadableHandleOfSystemEvent(GetStateTableEvent()), false);
+        R_SUCCEED();
     }
 
     Result RgltrManager::GetRegulatorStateTableCount(sf::Out<s32> out_count) {

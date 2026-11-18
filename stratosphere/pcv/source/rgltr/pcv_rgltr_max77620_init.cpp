@@ -17,6 +17,7 @@
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
 #include "pcv_rgltr_max77620.hpp"
+#include "pcv_rgltr_common_volt.hpp"
 #include "../pcv_i2c.hpp"
 #include "../pcv_hardware_type.hpp"
 
@@ -494,6 +495,18 @@ namespace ams::pcv::rgltr {
             R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
         }
 
+        void SetPmcNoIoPowerBit(const Regulator &regulator) {
+            constexpr u32 AbpdevPmcNoIoPower = 0x44;
+
+            u32 no_io_power = 0;
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, ~0, no_io_power | regulator.pmc_bit));
+
+            /* Nintendo rereads the value twice. */
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
+            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
+        }
+
     }
 
     void InitializeMax77620() {
@@ -568,6 +581,31 @@ namespace ams::pcv::rgltr {
         R_TRY(ReadEnabledRegister(idx, std::addressof(enabled_register)));
 
         enabled = enabled_register != 0;
+        R_SUCCEED();
+    }
+
+    Result DisableMax77620(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+
+        if (regulator.fps_src != FpsSourceNone) {
+            return ResultSuccess();
+        }
+
+        /* Only the first regulator can be forced on. */
+        if (idx == 0 && regulator.forced_on) {
+            return ResultSuccess();
+        }
+
+        if (regulator.pmc_bit) {
+            SetPmcNoIoPowerBit(regulator);
+        }
+
+        /* Clear the enable field. */
+        R_TRY(WriteEnabledRegister(idx, 0));
+        regulator.enabled_state = 0;
+
+        SleepForRamp(regulator.disable_delay_us);
+
         R_SUCCEED();
     }
 

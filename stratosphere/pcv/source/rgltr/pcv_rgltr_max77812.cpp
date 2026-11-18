@@ -193,6 +193,45 @@ namespace ams::pcv::rgltr {
         R_SUCCEED();
     }
 
+    Result DisableMax77812(u32 idx) {
+        Regulator &regulator = GetRegulator(idx);
+        /* Is this even needed */
+        {
+            u8 en_ctrl;
+            R_DISCARD(I2cRead(*regulator.session, Max77812EnCtrlReg, en_ctrl));
+        }
+
+        if (!regulator.enable_count) {
+            /* Already disabled */
+            R_SUCCEED();
+        }
+
+        if (--regulator.enable_count) {
+            /* Still enabled, nothing left to do. */
+            R_SUCCEED();
+        }
+
+        const Slew &slew = GetSlew();
+
+        /* Fully disable it */
+        u8 en_ctrl;
+        R_TRY(I2cRead(*regulator.session, Max77812EnCtrlReg, en_ctrl));
+        en_ctrl &= ~regulator.master_en_mask;
+        R_TRY(I2cWrite(*regulator.session, Max77812EnCtrlReg, en_ctrl));
+
+        /* Sleep */
+        u64 delay_us = AddRampMargin(slew.shdn_per_us);
+        SleepForRamp(delay_us);
+
+        /* readback because why not */
+        {
+            u8 en_ctrl;
+            R_DISCARD(I2cRead(*regulator.session, Max77812EnCtrlReg, en_ctrl));
+        }
+
+        R_SUCCEED();
+    }
+
     bool FinalizeMax77812(u32 idx) {
         Regulator &regulator = GetRegulator(idx);
 

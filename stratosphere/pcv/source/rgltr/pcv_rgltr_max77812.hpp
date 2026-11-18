@@ -24,6 +24,7 @@ namespace ams::pcv::rgltr {
     u32 GetCachedVoltageDvfsPmic(u32 idx);
     Result EnableMax77812(u32 idx);
     Result IsEnabledMax77812(u32 idx, bool &enabled);
+    Result DisableMax77812(u32 idx);
     bool FinalizeMax77812(u32 idx);
 
 }

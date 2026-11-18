@@ -21,5 +21,6 @@ namespace ams::pcv::rgltr {
     void InitializeMax77620();
     Result EnableMax77620(u32 idx);
     Result IsEnabledMax77620(u32 idx, bool &enabled);
+    Result DisableMax77620(u32 idx);
 
 }

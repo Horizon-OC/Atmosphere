@@ -17,22 +17,30 @@
 #include <stratosphere.hpp>
 #include "pcv_rgltr_power_domain.hpp"
 #include "pcv_rgltr_session.hpp"
+#include "pcv_rgltr_control.hpp"
+#include "pcv_rgltr_event.hpp"
 
 namespace ams::pcv::rgltr {
 
     RgltrSession::RgltrSession(PowerDomain *domain) : m_domain(domain) {
         AMS_ASSERT(m_domain != nullptr);
-        m_domain->OnSessionOpened();
+        m_domain->AttachSession(std::addressof(m_domain_session));
     }
 
     RgltrSession::~RgltrSession() {
-        /* Todo check this. */
-        m_domain->OnSessionClosed();
+        m_domain->DetachSession(std::addressof(m_domain_session));
+        m_domain->UpdateAfterSessionClose();
     }
 
     Result RgltrSession::RequestOutput(bool in_enabled) {
-        AMS_UNUSED(in_enabled);
-        AMS_ABORT("TODO");
+        R_TRY(m_domain->SetOutputRequest(std::addressof(m_domain_session), in_enabled));
+
+        /* Signal event on state table devices. */
+        if (IsStateTableDevice(m_domain)) {
+            os::SignalSystemEvent(GetStateTableEvent());
+        }
+
+        R_SUCCEED();
     }
 
     Result RgltrSession::CancelOutputRequest() {

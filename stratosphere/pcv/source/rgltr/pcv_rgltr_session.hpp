@@ -36,7 +36,8 @@ namespace ams::pcv::rgltr {
 
     class RgltrSession {
         private:
-            PowerDomain *m_domain;
+            PowerDomain       *m_domain;
+            PowerDomainSession m_domain_session{};
         public:
             explicit RgltrSession(PowerDomain *domain);
             ~RgltrSession();

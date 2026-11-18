@@ -102,6 +102,20 @@ namespace ams::pcv::rgltr {
             }
         }
 
+        Result DisablePowerDomainImpl(u32 idx) {
+            if (!IsRegulatorOpen(idx)) {
+                R_SUCCEED();
+            }
+
+            Regulator &regulator = GetRegulator(idx);
+            switch (regulator.type) {
+                case PmicType_Main:        R_RETURN(DisableMax77620(idx));
+                case PmicType_Erista_Dvfs: R_RETURN(DisableMax77621(idx));
+                case PmicType_Mariko_Dvfs: R_RETURN(DisableMax77812(idx));
+                default:                   AMS_ABORT();
+            }
+        }
+
         constinit DeviceCode g_state_table_domains[] = {
             PcvPowerDomainId_Max77620_Sd0,
             PcvPowerDomainId_Max77621_Cpu,
@@ -134,7 +148,6 @@ namespace ams::pcv::rgltr {
 
             return voltage;
         }
-
     }
 
     Result SetVoltage(PowerDomain *domain, u32 micro_volts) {
@@ -214,7 +227,7 @@ namespace ams::pcv::rgltr {
     Result IsPowerDomainEnabled(PowerDomain *domain, bool &enabled) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
 
-         /* Initialize handle */
+        /* Initialize handle */
         DeviceHandle handle;
         if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
             R_SUCCEED();
@@ -228,8 +241,39 @@ namespace ams::pcv::rgltr {
         R_RETURN(result);
     }
 
+    Result DisablePowerDomain(PowerDomain *domain) {
+        R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        /* Initialize handle */
+        DeviceHandle handle;
+        if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
+            R_SUCCEED();
+        }
+
+        const Result result = DisablePowerDomainImpl(handle.device_index);
+
+        /* Finalize them. */
+        FinalizeHandle(std::addressof(handle));
+
+        R_RETURN(result);
+    }
+
     s32 GetStateTableCount() {
         return static_cast<s32>(util::size(g_state_table_domains));
+    }
+
+    bool IsStateTableDevice(PowerDomain *domain) {
+        if (domain == nullptr) {
+            return false;
+        }
+
+        for (const auto &code : g_state_table_domains) {
+            if (domain->GetDeviceCode() == code) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     Result GetStateTable(PowerDomainState *state, s32 *out_count, s32 max_count) {

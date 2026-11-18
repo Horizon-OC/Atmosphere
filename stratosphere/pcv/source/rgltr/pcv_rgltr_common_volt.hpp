@@ -37,7 +37,7 @@ namespace ams::pcv::rgltr {
 
     ALWAYS_INLINE void SleepForRamp(u32 delay_us) {
         if (delay_us >= 1) {
-            svc::SleepThread(static_cast<s64>(1000) * delay_us);
+            os::SleepThread(TimeSpan::FromMicroSeconds(delay_us));
         }
     }
 
