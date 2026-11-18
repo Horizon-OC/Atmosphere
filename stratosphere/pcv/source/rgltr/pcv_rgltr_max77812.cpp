@@ -16,13 +16,14 @@
 
 #include "pcv_rgltr.hpp"
 #include "pcv_rgltr_max77812.hpp"
-#include "pcv_rgltr_max77812_init.hpp"
 #include "pcv_rgltr_common_volt.hpp"
 #include "../pcv_i2c.hpp"
 
 namespace ams::pcv::rgltr {
 
     namespace {
+
+        constinit Slew g_slew = {};
 
         bool IsSafeVoltage(const Regulator &regulator, u32 voltage) {
             return IsVoltageInRange(voltage, regulator.dvfs_pmic.min_uv, regulator.dvfs_pmic.max_uv);
@@ -244,6 +245,10 @@ namespace ams::pcv::rgltr {
         }
 
         return true;
+    }
+
+    Slew &GetSlew() {
+        return g_slew;
     }
 
 }

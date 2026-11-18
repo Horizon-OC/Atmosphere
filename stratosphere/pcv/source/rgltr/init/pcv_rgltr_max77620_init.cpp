@@ -15,15 +15,18 @@
  */
 
 #include <stratosphere.hpp>
-#include "pcv_rgltr.hpp"
-#include "pcv_rgltr_max77620.hpp"
-#include "pcv_rgltr_common_volt.hpp"
-#include "../pcv_i2c.hpp"
-#include "../pcv_hardware_type.hpp"
+#include "../pcv_rgltr.hpp"
+#include "pcv_rgltr_max77620_init.hpp"
+#include "../pcv_rgltr_max77620.hpp"
+#include "../pcv_rgltr_max77620_impl.hpp"
+#include "../../pcv_i2c.hpp"
+#include "../../pcv_hardware_type.hpp"
 
 namespace ams::pcv::rgltr {
 
     namespace {
+
+        using namespace max77620;
 
         constinit Max77620InitReg g_init_regs[] = {
             { .reg = 0x43, .time_period = 7, .en_src = 0, .sw_enable = 0, },
@@ -38,11 +41,6 @@ namespace ams::pcv::rgltr {
         constinit u32 g_ldo_rate_table[] = {
             100000, 5000,
         };
-
-        /* FPS (flexible power sequencer) sources. */
-        constexpr u32 FpsSourceCount = 4;
-        constexpr u32 FpsSourceNone  = 3;
-        constexpr u32 FpsSourceNoOp  = 5;
 
         constexpr u32 FpsPeriodCount = 8;
 
@@ -70,7 +68,7 @@ namespace ams::pcv::rgltr {
 
             g_cid4 = chip_id;
 
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         void SetI2cSessions() {
@@ -105,25 +103,6 @@ namespace ams::pcv::rgltr {
             }
         }
 
-        u8 GetEnableRegister(Regulator &reg) {
-            return reg.is_ldo ? reg.volt_reg : reg.config_reg;
-        }
-
-        Result ReadEnabledRegister(u32 idx, u32 *enabled) {
-            Regulator &regulator = GetRegulator(idx);
-            u8 enable_register = GetEnableRegister(regulator);
-
-            u8 out;
-            R_TRY(I2cRead(*regulator.session, enable_register, out));
-
-            *enabled = static_cast<u8>(out & regulator.enable_mask) >> regulator.enable_shift;
-
-            return ResultSuccess();
-        }
-
-        constexpr u32 EnabledRegulator = 3;
-        constexpr u32 InvalidRegulator = 4;
-
         bool GetEnabled(u32 idx, bool &enabled) {
             const Regulator &regulator = GetRegulator(idx);
 
@@ -153,18 +132,6 @@ namespace ams::pcv::rgltr {
             /* It's enabled if the field is non-zero. */
             enabled = enabled_register != 0;
             return true;
-        }
-
-        Result WriteEnabledRegister(u32 idx, u8 enabled) {
-            Regulator &regulator = GetRegulator(idx);
-            u8 enable_register = GetEnableRegister(regulator);
-
-            u8 value;
-            R_TRY(I2cRead(*regulator.session, enable_register, value));
-
-            value = (value & ~regulator.enable_mask) | (regulator.enable_mask & (enabled << regulator.enable_shift));
-
-            R_RETURN(I2cWrite(*regulator.session, enable_register, value));
         }
 
         void DropRegulatorReference(u32 idx) {
@@ -257,7 +224,7 @@ namespace ams::pcv::rgltr {
 
             out_voltage = regulator.main_pmic.min_uv + regulator.main_pmic.step_uv * volt_code;
 
-            return ResultSuccess();
+            R_SUCCEED();
         }
 
         void SyncPmcBit(u32 idx, bool enabled) {
@@ -448,65 +415,6 @@ namespace ams::pcv::rgltr {
             }
         }
 
-        Result IsPowerGood(bool &out, const Regulator &regulator) {
-            u8 status;
-
-            if (regulator.is_ldo) {
-                R_TRY(I2cRead(*regulator.session, regulator.config_reg, status));
-                out = (status & Max77620PmicLdoPowerOkMask) != 0;
-            } else {
-                R_TRY(I2cRead(*regulator.session, Max77620PmicStatSdReg, status));
-                out = (status & regulator.sd_status_mask) == 0;
-            }
-
-            return ResultSuccess();
-        }
-
-        Result WaitForPowerGood(const Regulator &regulator) {
-            /* 1s max polling. */
-            constexpr u32 EnablePollPeriodUs     = 50;
-            constexpr u32 EnablePollCount        = 20021;
-            constexpr Result ResultEnableTimeout = -14;
-
-            for (u32 i = 0; i < EnablePollCount; ++i) {
-                bool power_good;
-                R_TRY(IsPowerGood(power_good, regulator));
-
-                if (power_good) {
-                    svc::SleepThread(static_cast<s64>(1000) * regulator.enable_delay_us);
-                    return ResultSuccess();
-                }
-
-                svc::SleepThread(static_cast<s64>(1000) * EnablePollPeriodUs);
-            }
-
-            return ResultEnableTimeout;
-        }
-
-        void ClearPmcNoIoPowerBit(const Regulator &regulator) {
-            constexpr u32 AbpdevPmcNoIoPower = 0x44;
-
-            u32 no_io_power = 0;
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, ~0, no_io_power & ~regulator.pmc_bit));
-
-            /* Nintendo rereads the value twice. */
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
-        }
-
-        void SetPmcNoIoPowerBit(const Regulator &regulator) {
-            constexpr u32 AbpdevPmcNoIoPower = 0x44;
-
-            u32 no_io_power = 0;
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, ~0, no_io_power | regulator.pmc_bit));
-
-            /* Nintendo rereads the value twice. */
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
-            R_DISCARD(svc::ReadWriteRegister(std::addressof(no_io_power), regulator.pmc_mmio + AbpdevPmcNoIoPower, 0, 0));
-        }
-
     }
 
     void InitializeMax77620() {
@@ -541,72 +449,6 @@ namespace ams::pcv::rgltr {
 
         /* Initialize on off config. */
         InitializeOnOffConfig();
-    }
-
-    Result EnableMax77620(u32 idx) {
-        Regulator &regulator = GetRegulator(idx);
-
-        if (regulator.fps_src != FpsSourceNone) {
-            return ResultSuccess();
-        }
-
-        /* Only the first regulator can be forced on. */
-        if (idx == 0 && regulator.forced_on) {
-            return ResultSuccess();
-        }
-
-        const u8 enable_value = regulator.enable_value;
-        R_TRY(WriteEnabledRegister(idx, enable_value));
-        regulator.enabled_state = enable_value;
-
-        const Result result = WaitForPowerGood(regulator);
-
-        if (regulator.pmc_bit) {
-            ClearPmcNoIoPowerBit(regulator);
-        }
-
-        return result;
-    }
-
-    Result IsEnabledMax77620(u32 idx, bool &enabled) {
-        Regulator &regulator = GetRegulator(idx);
-
-        /* Only the first regulator can be forced on. */
-        if (idx == 0 && regulator.forced_on) {
-            enabled = true;
-            return ResultSuccess();
-        }
-
-        u32 enabled_register;
-        R_TRY(ReadEnabledRegister(idx, std::addressof(enabled_register)));
-
-        enabled = enabled_register != 0;
-        R_SUCCEED();
-    }
-
-    Result DisableMax77620(u32 idx) {
-        Regulator &regulator = GetRegulator(idx);
-
-        if (regulator.fps_src != FpsSourceNone) {
-            return ResultSuccess();
-        }
-
-        /* Only the first regulator can be forced on. */
-        if (idx == 0 && regulator.forced_on) {
-            return ResultSuccess();
-        }
-
-        if (regulator.pmc_bit) {
-            SetPmcNoIoPowerBit(regulator);
-        }
-
-        /* Clear the enable field. */
-        R_TRY(WriteEnabledRegister(idx, 0));
-        regulator.enabled_state = 0;
-
-        SleepForRamp(regulator.disable_delay_us);
-
-        R_SUCCEED();
     }
 
 }

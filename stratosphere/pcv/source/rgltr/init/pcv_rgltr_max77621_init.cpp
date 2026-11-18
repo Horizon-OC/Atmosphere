@@ -15,12 +15,12 @@
  */
 
 #include <stratosphere.hpp>
-#include "pcv_rgltr.hpp"
+#include "../pcv_rgltr.hpp"
 
-#include "../gpio/pcv_gpio_handle.hpp"
-#include "../pcv_i2c.hpp"
+#include "../../gpio/pcv_gpio_handle.hpp"
+#include "../../pcv_i2c.hpp"
 
-#include "pcv_rgltr_max77621.hpp"
+#include "../pcv_rgltr_max77621.hpp"
 
 namespace ams::pcv::rgltr {
 

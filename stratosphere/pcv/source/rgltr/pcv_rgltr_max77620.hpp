@@ -23,5 +23,8 @@ namespace ams::pcv::rgltr {
     Result GetVoltageMax77620(u32 idx, u32 &micro_volts);
     u32 GetCachedVoltageMax77620(u32 idx);
     bool FinalizeMax77620(u32 idx);
+    Result EnableMax77620(u32 idx);
+    Result IsEnabledMax77620(u32 idx, bool &enabled);
+    Result DisableMax77620(u32 idx);
 
 }

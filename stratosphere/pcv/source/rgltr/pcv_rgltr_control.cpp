@@ -20,7 +20,6 @@
 #include "pcv_rgltr_control.hpp"
 #include "pcv_rgltr_device_handle.hpp"
 #include "pcv_rgltr.hpp"
-#include "pcv_rgltr_max77620_init.hpp"
 #include "pcv_rgltr_max77620.hpp"
 #include "pcv_rgltr_max77621.hpp"
 #include "pcv_rgltr_max77812.hpp"

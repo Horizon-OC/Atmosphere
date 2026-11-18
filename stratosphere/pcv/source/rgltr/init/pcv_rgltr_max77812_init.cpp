@@ -15,10 +15,10 @@
  */
 
 #include <stratosphere.hpp>
-#include "pcv_rgltr.hpp"
+#include "../pcv_rgltr.hpp"
 #include "pcv_rgltr_max77812_init.hpp"
-#include "pcv_rgltr_max77812.hpp"
-#include "../pcv_i2c.hpp"
+#include "../pcv_rgltr_max77812.hpp"
+#include "../../pcv_i2c.hpp"
 
 namespace ams::pcv::rgltr {
 
@@ -146,7 +146,6 @@ namespace ams::pcv::rgltr {
 
         constexpr MasterCfg MasterConfig[MasterCount] = { GpuCfg, M2Cfg, VddqCfg, CpuCfg, };
 
-        Slew g_slew;
 
         void WriteEs2InitRegs() {
             for (size_t i = 0; i < util::size(es2_init_regs); ++i) {
@@ -240,8 +239,8 @@ namespace ams::pcv::rgltr {
             u8 start_slew_code =  slew_reg_value & Max77812StartSlewRateMask;
             u8 shdn_slew_code  = (slew_reg_value & Max77812ShdnSlewRateMask) >> Max77812SlewRateShift;
 
-            g_slew.start_per_us = SlewUvPerUs[start_slew_code];
-            g_slew.shdn_per_us  = SlewUvPerUs[shdn_slew_code];
+            GetSlew().start_per_us = SlewUvPerUs[start_slew_code];
+            GetSlew().shdn_per_us  = SlewUvPerUs[shdn_slew_code];
 
             R_SUCCEED();
         }
@@ -254,8 +253,8 @@ namespace ams::pcv::rgltr {
             u8 ramp_up_code   = ramp_reg_value  & Max77812RampupSlewRateMask;
             u8 ramp_down_code = (ramp_reg_value & Max77812RampdownSlewRateMask) >> Max77812SlewRateShift;
 
-            g_slew.ramp_up_per_us   = SlewUvPerUs[ramp_up_code];
-            g_slew.ramp_down_per_us = SlewUvPerUs[ramp_down_code];
+            GetSlew().ramp_up_per_us   = SlewUvPerUs[ramp_up_code];
+            GetSlew().ramp_down_per_us = SlewUvPerUs[ramp_down_code];
 
             R_SUCCEED();
         }
@@ -332,10 +331,6 @@ namespace ams::pcv::rgltr {
 
         /* Perform the rest of the setup. */
         SetupDvfsPhases();
-    }
-
-    Slew &GetSlew() {
-        return g_slew;
     }
 
 }

@@ -16,9 +16,9 @@
 
 #include <stratosphere.hpp>
 #include "pcv_rgltr.hpp"
-#include "pcv_rgltr_max77620_init.hpp"
-#include "pcv_rgltr_max77621_init.hpp"
-#include "pcv_rgltr_max77812_init.hpp"
+#include "init/pcv_rgltr_max77620_init.hpp"
+#include "init/pcv_rgltr_max77621_init.hpp"
+#include "init/pcv_rgltr_max77812_init.hpp"
 #include "pcv_rgltr_power_domain.hpp"
 #include "pcv_rgltr_control.hpp"
 #include "pcv_rgltr_event.hpp"

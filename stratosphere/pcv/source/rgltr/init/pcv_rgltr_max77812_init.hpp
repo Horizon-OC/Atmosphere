@@ -19,15 +19,6 @@
 
 namespace ams::pcv::rgltr {
 
-    struct Slew {
-        u32 start_per_us;
-        u32 shdn_per_us;
-        u32 ramp_up_per_us;
-        u32 ramp_down_per_us;
-    };
-
     void InitializeMax77812();
-
-    Slew &GetSlew();
 
 }

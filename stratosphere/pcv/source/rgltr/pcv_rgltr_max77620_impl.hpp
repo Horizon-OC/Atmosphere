@@ -15,12 +15,23 @@
  */
 
 #pragma once
+#include <stratosphere.hpp>
+#include "pcv_rgltr.hpp"
 
-namespace ams::pcv::rgltr {
+namespace ams::pcv::rgltr::max77620 {
 
-    void InitializeMax77620();
-    Result EnableMax77620(u32 idx);
-    Result IsEnabledMax77620(u32 idx, bool &enabled);
-    Result DisableMax77620(u32 idx);
+    /* FPS (flexible power sequencer) sources. */
+    constexpr inline u32 FpsSourceCount = 4;
+    constexpr inline u32 FpsSourceNone  = 3;
+    constexpr inline u32 FpsSourceNoOp  = 5;
+
+    constexpr inline u32 EnabledRegulator = 3;
+    constexpr inline u32 InvalidRegulator = 4;
+
+    Result ReadEnabledRegister(u32 idx, u32 *enabled);
+    Result WriteEnabledRegister(u32 idx, u8 enabled);
+
+    void SetPmcNoIoPowerBit(const Regulator &regulator);
+    void ClearPmcNoIoPowerBit(const Regulator &regulator);
 
 }
