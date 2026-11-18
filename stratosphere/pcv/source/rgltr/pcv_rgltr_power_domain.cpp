@@ -46,9 +46,7 @@ namespace ams::pcv::rgltr {
     }
 
     Result PowerDomain::SetOutputEnabled(bool enable) {
-        if (IsEnabledInCache(enable)) {
-            R_SUCCEED();
-        }
+        R_SUCCEED_IF(IsEnabledInCache(enable));
 
         if (enable) {
             const s64 ready_time_ns = m_min_off_hold_time_ns + m_last_off_time_ns;
