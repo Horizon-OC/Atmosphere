@@ -74,8 +74,10 @@ namespace ams::pcv::rgltr {
         private:
             Result SetOutputEnabled(bool enable);
             Result ApplyRequests(bool enable);
+            Result ReapplyOutputRequests();
         public:
             Result SetOutputRequest(PowerDomainSession *session, bool enable);
+            Result CancelOutputRequests(PowerDomainSession *session);
         public:
             Result IsEnabledCacheValid(bool &enabled);
             Result IsEnabled(bool &enabled);

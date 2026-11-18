@@ -74,9 +74,21 @@ namespace ams::pcv::rgltr {
 
         R_TRY(ResolveOutputRequests(found, resolved));
 
+        /* Only continue if the result is the state we're applying. */
         R_SUCCEED_IF(!found || resolved != enable);
 
         R_RETURN(SetOutputEnabled(enable));
+    }
+
+    Result PowerDomain::ReapplyOutputRequests() {
+        bool found;
+        bool resolved;
+
+        R_TRY(ResolveOutputRequests(found, resolved));
+
+        R_SUCCEED_IF(!found);
+
+        R_RETURN(SetOutputEnabled(resolved));
     }
 
     Result PowerDomain::SetOutputRequest(PowerDomainSession *session, bool enable) {
@@ -94,6 +106,14 @@ namespace ams::pcv::rgltr {
         };
 
         R_RETURN(ApplyRequests(enable));
+    }
+
+    Result PowerDomain::CancelOutputRequests(PowerDomainSession *session) {
+        std::scoped_lock lk(m_mutex);
+
+        session->output_request_valid = false;
+
+        R_RETURN(ReapplyOutputRequests());
     }
 
     Result PowerDomain::IsEnabledCacheValid(bool &enabled) {
