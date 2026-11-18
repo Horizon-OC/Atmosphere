@@ -108,9 +108,10 @@ namespace ams::pcv::rgltr {
         R_RETURN(ApplyRequests(enable));
     }
 
-    Result PowerDomain::CancelOutputRequests(PowerDomainSession *session) {
+    Result PowerDomain::CancelOutputRequest(PowerDomainSession *session) {
         std::scoped_lock lk(m_mutex);
 
+        /* Invalidate output requests. */
         session->output_request_valid = false;
 
         R_RETURN(ReapplyOutputRequests());

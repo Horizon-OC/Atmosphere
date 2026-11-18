@@ -44,12 +44,11 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrSession::CancelOutputRequest() {
-        AMS_ABORT("TODO");
+        R_RETURN(m_domain->CancelOutputRequest(std::addressof(m_domain_session)));
     }
 
     Result RgltrSession::IsOutputEnabled(sf::Out<bool> out_enabled) {
-        AMS_UNUSED(out_enabled);
-        AMS_ABORT("TODO");
+        R_RETURN(m_domain->IsEnabled(*out_enabled));
     }
 
     Result RgltrSession::GetVoltageRangeInMicroVolt(sf::Out<u32> out_min_uv, sf::Out<u32> out_max_uv, sf::Out<u32> out_step_uv) {
