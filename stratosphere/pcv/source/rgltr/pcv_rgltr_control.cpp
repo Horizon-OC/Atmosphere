@@ -73,6 +73,20 @@ namespace ams::pcv::rgltr {
             }
         }
 
+        void GetVoltageRangeImpl(u32 idx, u32 &min_uv, u32 &max_uv, u32 &step_uv) {
+            if (!IsRegulatorOpen(idx)) {
+                return;
+            }
+
+            Regulator &regulator = GetRegulator(idx);
+            switch (regulator.type) {
+                case PmicType_Main:        return GetVoltageRangeMax77620(idx, min_uv, max_uv, step_uv);
+                case PmicType_Erista_Dvfs:
+                case PmicType_Mariko_Dvfs: return GetVoltageRangeDvfsPmic(idx, min_uv, max_uv, step_uv);
+                default:                   AMS_ABORT();
+            }
+        }
+
         Result EnablePowerDomainImpl(u32 idx) {
             if (!IsRegulatorOpen(idx)) {
                 R_SUCCEED();
@@ -147,9 +161,9 @@ namespace ams::pcv::rgltr {
 
         /* Initialize handle */
         DeviceHandle handle;
-        if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
-            R_SUCCEED();
-        }
+
+        /* NOTE: nintendo does not check if this succeeds */
+        InitializeHandleByName(std::addressof(handle), domain->GetName());
 
         /* Try to set the voltage if it's open */
         const Result result = SetVoltageImpl(handle.device_index, micro_volts);
@@ -163,9 +177,9 @@ namespace ams::pcv::rgltr {
 
         /* Initialize handle */
         DeviceHandle handle;
-        if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
-            R_SUCCEED();
-        }
+
+        /* NOTE: nintendo does not check if this succeeds */
+        InitializeHandleByName(std::addressof(handle), domain->GetName());
 
         /* Get The voltage if it's open */
         const Result result = GetVoltageImpl(handle.device_index, micro_volts);
@@ -186,13 +200,32 @@ namespace ams::pcv::rgltr {
 
         /* Initialize handle */
         DeviceHandle handle;
-        /* Note nintendo does not check if this succeeds */
+
+        /* NOTE: nintendo does not check if this succeeds */
         InitializeHandleByName(std::addressof(handle), domain->GetName());
 
         /* Read the cached voltage */
         micro_volts = GetCachedVoltageImpl(handle.device_index);
 
         /* Finalize */
+        FinalizeHandle(std::addressof(handle));
+
+        R_SUCCEED();
+    }
+
+    Result GetVoltageRange(PowerDomain *domain, u32 &min_uv, u32 &max_uv, u32 &step_uv) {
+        R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        /* Initialize handle */
+        DeviceHandle handle;
+
+        /* NOTE: nintendo does not check if this succeeds */
+        InitializeHandleByName(std::addressof(handle), domain->GetName());
+
+        /* Get the voltage range. */
+        GetVoltageRangeImpl(handle.device_index, min_uv, max_uv, step_uv);
+
+       /* Finalize them. */
         FinalizeHandle(std::addressof(handle));
 
         R_SUCCEED();

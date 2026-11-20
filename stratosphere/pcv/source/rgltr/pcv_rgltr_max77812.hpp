@@ -29,6 +29,7 @@ namespace ams::pcv::rgltr {
     Result SetVoltageMax77812Reg(u32 idx, u32 micro_volts, u8 reg);
     Result GetVoltageMax77812(u32 idx, u32 &out_micro_volts);
     u32 GetCachedVoltageDvfsPmic(u32 idx);
+    void GetVoltageRangeDvfsPmic(u32 idx, u32 &min_uv, u32 &max_uv, u32 &step_uv);
     Result EnableMax77812(u32 idx);
     Result IsEnabledMax77812(u32 idx, bool &enabled);
     Result DisableMax77812(u32 idx);

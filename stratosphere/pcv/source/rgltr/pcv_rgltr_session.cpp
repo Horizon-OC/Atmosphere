@@ -19,6 +19,7 @@
 #include "pcv_rgltr_session.hpp"
 #include "pcv_rgltr_state_table.hpp"
 #include "pcv_rgltr_event.hpp"
+#include "pcv_rgltr_control.hpp"
 
 namespace ams::pcv::rgltr {
 
@@ -48,17 +49,23 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrSession::IsOutputEnabled(sf::Out<bool> out_enabled) {
+        R_UNLESS(out_enabled.GetPointer() != nullptr, ResultInvalidArgument());
+
         R_RETURN(m_domain->IsEnabled(*out_enabled));
     }
 
     Result RgltrSession::GetVoltageRangeInMicroVolt(sf::Out<u32> out_min_uv, sf::Out<u32> out_max_uv, sf::Out<u32> out_step_uv) {
-        AMS_UNUSED(out_min_uv, out_max_uv, out_step_uv);
-        AMS_ABORT("TODO");
+        R_UNLESS(out_min_uv.GetPointer()  != nullptr, ResultInvalidArgument());
+        R_UNLESS(out_max_uv.GetPointer()  != nullptr, ResultInvalidArgument());
+        R_UNLESS(out_step_uv.GetPointer() != nullptr, ResultInvalidArgument());
+
+        R_RETURN(GetVoltageRange(m_domain, *out_min_uv, *out_max_uv, *out_step_uv));
     }
 
     Result RgltrSession::GetVoltageInMicroVolt(sf::Out<u32> out_uv) {
-        AMS_UNUSED(out_uv);
-        AMS_ABORT("TODO");
+        R_UNLESS(out_uv.GetPointer() != nullptr, ResultInvalidArgument());
+
+        R_RETURN(m_domain->GetVoltage(*out_uv));
     }
 
     Result RgltrSession::RequestVoltageInMicroVolt(s32 in_min_uv, s32 in_max_uv) {

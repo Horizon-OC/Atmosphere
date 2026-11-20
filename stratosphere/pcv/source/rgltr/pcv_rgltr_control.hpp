@@ -23,6 +23,7 @@ namespace ams::pcv::rgltr {
     Result SetVoltage(PowerDomain *domain, u32 micro_volts);
     Result GetVoltage(PowerDomain *domain, u32 &micro_volts);
     Result GetCachedVoltage(PowerDomain *domain, u32 &micro_volts);
+    Result GetVoltageRange(PowerDomain *domain, u32 &min_uv, u32 &max_uv, u32 &step_uv);
     Result EnablePowerDomain(PowerDomain *domain);
     Result IsPowerDomainEnabled(PowerDomain *domain, bool &enabled);
     Result DisablePowerDomain(PowerDomain *domain);

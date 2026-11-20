@@ -130,6 +130,15 @@ namespace ams::pcv::rgltr {
         return GetVoltageFromCode(regulator, regulator.dvfs_pmic.volt_code);
     }
 
+    /* Todo move this in some common file. */
+    void GetVoltageRangeDvfsPmic(u32 idx, u32 &min_uv, u32 &max_uv, u32 &step_uv) {
+        Regulator &regulator = GetRegulator(idx);
+
+        min_uv  = regulator.dvfs_pmic.min_uv;
+        max_uv  = regulator.dvfs_pmic.max_uv;
+        step_uv = regulator.dvfs_pmic.step_uv;
+    }
+
     Result EnableMax77812(u32 idx) {
         Regulator &regulator = GetRegulator(idx);
 

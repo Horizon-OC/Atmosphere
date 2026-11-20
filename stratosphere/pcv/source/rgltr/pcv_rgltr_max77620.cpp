@@ -188,6 +188,15 @@ namespace ams::pcv::rgltr {
         return GetVoltageFromCode(regulator, regulator.main_pmic.volt_code);
     }
 
+    void GetVoltageRangeMax77620(u32 idx, u32 &default_uv, u32 &max_uv, u32 &step_uv) {
+        Regulator &regulator = GetRegulator(idx);
+
+        /* Why are they using default uv? TODO: Verify */
+        default_uv = regulator.main_pmic.default_uv;
+        max_uv     = regulator.main_pmic.max_uv;
+        step_uv    = regulator.main_pmic.step_uv;
+    }
+
     bool FinalizeMax77620(u32 idx) {
         Regulator &regulator = GetRegulator(idx);
 
