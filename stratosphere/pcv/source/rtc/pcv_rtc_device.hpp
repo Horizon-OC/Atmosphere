@@ -534,7 +534,7 @@ namespace ams::pcv::rtc {
 
                 bool flag = GetExternalRtcResetFlag();
 
-                R_ABORT_UNLESS(!flag);
+                AMS_ABORT_UNLESS(!flag);
 
                 R_SUCCEED();
             }
