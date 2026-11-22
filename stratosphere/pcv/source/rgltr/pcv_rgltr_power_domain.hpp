@@ -100,6 +100,7 @@ namespace ams::pcv::rgltr {
             Result SetOutputEnabled(bool enable);
             Result ApplyRequests(bool enable);
             Result ReapplyOutputRequests();
+            Result ReapplyVoltageRequests();
         public:
             Result SetOutputRequest(PowerDomainSession *session, bool enable);
             Result CancelOutputRequest(PowerDomainSession *session);

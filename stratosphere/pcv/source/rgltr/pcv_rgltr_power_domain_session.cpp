@@ -58,8 +58,14 @@ namespace ams::pcv::rgltr {
         FreeSession(FindSession(session));
     }
 
+    /* NOTE: Nintendo returns any results here but doesn't bother checking any of them, so we just discard them and make this function void.. */
     void PowerDomain::UpdateAfterSessionClose() {
-        AMS_ABORT("TODO");
+        std::scoped_lock lk(m_mutex);
+
+        m_min_off_hold_time_ns = ResolveOffStateHoldRequests();
+
+        R_DISCARD(ReapplyOutputRequests());
+        R_DISCARD(ReapplyVoltageRequests());
     }
 
     bool PowerDomain::HasOpenSessions() {

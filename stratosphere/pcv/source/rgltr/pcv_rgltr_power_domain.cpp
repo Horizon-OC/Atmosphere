@@ -82,7 +82,7 @@ namespace ams::pcv::rgltr {
 
         /* Find the largest requested hold time. */
         for (const auto *session_entry : m_attached_sessions) {
-            if (session_entry->hold_time_valid && session_entry->hold_time > max_hold_time) {
+            if (session_entry != nullptr && session_entry->hold_time_valid &&session_entry->hold_time > max_hold_time) {
                 max_hold_time = session_entry->hold_time;
             }
         }
@@ -162,6 +162,24 @@ namespace ams::pcv::rgltr {
         R_RETURN(ReapplyOutputRequests());
     }
 
+    Result PowerDomain::ReapplyVoltageRequests() {
+        u32 voltage_request{};
+        R_TRY_CATCH(ResolveVoltageRequests(voltage_request)) {
+            R_CATCH(ResultInvalidCache) { /* ... */ }
+        } R_END_TRY_CATCH;
+
+        /* Check if we need to change the voltage at all. */
+        R_SUCCEED_IF(IsVoltageCached(voltage_request));
+
+        R_TRY(SetVoltage(this, voltage_request));
+
+        /* Cache the new voltage. */
+        m_voltage_cache_uv    = voltage_request;
+        m_voltage_cache_valid = true;
+
+        R_SUCCEED();
+    }
+
     Result PowerDomain::SetVoltageRequest(PowerDomainSession *session, s32 min_uv, s32 max_uv) {
         std::scoped_lock lk(m_mutex);
 
@@ -181,23 +199,8 @@ namespace ams::pcv::rgltr {
         session->voltage_max_uv    = max_uv;
         session->voltage_max_valid = true;
 
-        /* Resolve all requests. */
-        u32 requested_voltage{};
-        R_TRY_CATCH(ResolveVoltageRequests(requested_voltage)) {
-            R_CONVERT(ResultInvalidCache, ResultSuccess());
-        } R_END_TRY_CATCH;
-
-        /* Check if we need to change the voltage at all. */
-        R_SUCCEED_IF(IsVoltageCached(requested_voltage));
-
-        /* Set the voltage and validate the cache */
-        Result set_voltage_result = SetVoltage(this, requested_voltage);
-        if (R_SUCCEEDED(set_voltage_result)) {
-            m_voltage_cache_uv    = requested_voltage;
-            m_voltage_cache_valid = true;
-
-            R_SUCCEED();
-        }
+        Result result_set_voltage = ReapplyVoltageRequests();
+        R_SUCCEED_IF(R_SUCCEEDED(result_set_voltage));
 
         /* Roll back on failure assuming the previous session was valid. */
         if (valid_session_voltage) {
@@ -208,10 +211,10 @@ namespace ams::pcv::rgltr {
         } else {
             /* The previous session wasn't valid. */
             session->voltage_min_valid = false;
-            session->voltage_min_valid = false;
+            session->voltage_max_valid = false;
         }
 
-        R_THROW(set_voltage_result);
+        R_THROW(result_set_voltage);
     }
 
     Result PowerDomain::CancelVoltageRequest(PowerDomainSession *session) {
@@ -221,21 +224,7 @@ namespace ams::pcv::rgltr {
         session->voltage_min_valid = false;
         session->voltage_max_valid = false;
 
-        u32 voltage_request{};
-        R_TRY_CATCH(ResolveVoltageRequests(voltage_request)) {
-            R_CATCH(ResultInvalidCache) { /* ... */ }
-        } R_END_TRY_CATCH;
-
-        /* Check if we need to change the voltage at all. */
-        R_SUCCEED_IF(IsVoltageCached(voltage_request));
-
-        R_TRY(SetVoltage(this, voltage_request));
-
-        /* Cache the new voltage. */
-        m_voltage_cache_uv    = voltage_request;
-        m_voltage_cache_valid = true;
-
-        R_SUCCEED();
+        R_RETURN(ReapplyVoltageRequests());
     }
 
     Result PowerDomain::GetMinimumOffStateHoldTime(u64 *out_hold_time) {
