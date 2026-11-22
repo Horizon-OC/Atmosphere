@@ -49,6 +49,13 @@ namespace ams::pcv::rgltr {
             u32 m_voltage_cache_uv{};
             bool m_voltage_cache_valid = false;
 
+            s32 m_min_voltage_uv{};
+            s32 m_max_voltage_uv{};
+
+            /* NOTE: Nintendo never writes to m_default_voltage_uv. */
+            /* u32 m_default_voltage_uv{}; */
+            /* bool m_default_voltage_valid = false; */
+
             u64 m_min_off_hold_time_ns{};
             u64 m_last_off_time_ns{};
         public:
@@ -69,8 +76,21 @@ namespace ams::pcv::rgltr {
             void UpdateAfterSessionClose();
             bool HasOpenSessions();
         private:
+            ALWAYS_INLINE bool IsSaneVoltageRequest(s32 min_uv, s32 max_uv) const {
+                return m_min_voltage_uv <= max_uv && m_max_voltage_uv >= min_uv;
+            }
+
+            ALWAYS_INLINE bool IsSaneVoltageRequest(const PowerDomainSession *session, s32 min_uv, s32 max_uv) const {
+                return session->voltage_min_uv <= max_uv && session->voltage_max_uv >= min_uv;
+            }
+
+            ALWAYS_INLINE bool IsValidSessionVoltage(PowerDomainSession *session) const {
+                return session->voltage_min_valid && session->voltage_max_valid;
+            }
+        private:
             /* Resolve sessions. */
             Result ResolveOutputRequests(bool &out_found, bool &out_enable);
+            Result ResolveVoltageRequests(u32 &out_voltage_uv);
         private:
             Result SetOutputEnabled(bool enable);
             Result ApplyRequests(bool enable);
@@ -78,6 +98,8 @@ namespace ams::pcv::rgltr {
         public:
             Result SetOutputRequest(PowerDomainSession *session, bool enable);
             Result CancelOutputRequest(PowerDomainSession *session);
+
+            Result SetVoltageRequest(PowerDomainSession *session, s32 min_uv, s32 max_uv);
         public:
             Result IsEnabledCacheValid(bool &enabled);
             Result IsEnabled(bool &enabled);

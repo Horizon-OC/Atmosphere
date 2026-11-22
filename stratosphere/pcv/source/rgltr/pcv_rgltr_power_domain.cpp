@@ -45,6 +45,38 @@ namespace ams::pcv::rgltr {
         R_SUCCEED();
     }
 
+    Result PowerDomain::ResolveVoltageRequests(u32 &out_voltage_uv) {
+        bool has_request = false;
+
+        s32 min_uv = m_min_voltage_uv;
+        s32 max_uv = m_max_voltage_uv;
+
+        for (const auto *session_entry : m_attached_sessions) {
+            if (session_entry == nullptr || !session_entry->voltage_min_valid || !session_entry->voltage_max_valid) {
+                continue;
+            }
+
+            R_UNLESS(IsSaneVoltageRequest(session_entry, min_uv, max_uv), ResultRequestConflict());
+
+            min_uv = std::max(min_uv, session_entry->voltage_min_uv);
+            max_uv = std::min(max_uv, session_entry->voltage_max_uv);
+            has_request = true;
+        }
+
+        if (has_request) {
+            out_voltage_uv = min_uv;
+            R_SUCCEED();
+        }
+
+        /* NOTE: Nintendo does this check, but m_default_voltage_valid is always false, so this is dead code. */
+        /* if (m_default_voltage_valid) { */
+            /* out_voltage_uv = m_default_voltage_uv; */
+            /* R_SUCCEED(); */
+        /* } */
+
+        R_THROW(ResultInvalidCache());
+    }
+
     Result PowerDomain::SetOutputEnabled(bool enable) {
         R_SUCCEED_IF(IsEnabledInCache(enable));
 
@@ -115,6 +147,58 @@ namespace ams::pcv::rgltr {
         session->output_request_valid = false;
 
         R_RETURN(ReapplyOutputRequests());
+    }
+
+    Result PowerDomain::SetVoltageRequest(PowerDomainSession *session, s32 min_uv, s32 max_uv) {
+        std::scoped_lock lk(m_mutex);
+
+        R_UNLESS(IsSaneVoltageRequest(min_uv, max_uv), ResultUnsupportedVoltage());
+
+        /* Save the previous voltage for potential rollbacks. */
+        s32 prev_min_voltage{};
+        s32 prev_max_voltage{};
+        bool valid_session_voltage = IsValidSessionVoltage(session);
+        if (valid_session_voltage) {
+            prev_min_voltage = session->voltage_min_uv;
+            prev_max_voltage = session->voltage_max_uv;
+        }
+
+        session->voltage_min_uv    = min_uv;
+        session->voltage_min_valid = true;
+        session->voltage_max_uv    = max_uv;
+        session->voltage_max_valid = true;
+
+        /* Resolve all requests. */
+        u32 requested_voltage{};
+        R_TRY_CATCH(ResolveVoltageRequests(requested_voltage)) {
+            R_CONVERT(ResultInvalidCache, ResultSuccess());
+        } R_END_TRY_CATCH;
+
+        /* Check if we need to change the voltage at all. */
+        R_SUCCEED_IF(m_voltage_cache_valid && m_voltage_cache_uv == requested_voltage);
+
+        /* Set the voltage and validate the cache */
+        Result set_voltage_result = SetVoltage(this, requested_voltage);
+        if (R_SUCCEEDED(set_voltage_result)) {
+            m_voltage_cache_uv    = requested_voltage;
+            m_voltage_cache_valid = true;
+
+            R_SUCCEED();
+        }
+
+        /* Roll back on failure assuming the previous session was valid. */
+        if (valid_session_voltage) {
+            session->voltage_min_uv    = prev_min_voltage;
+            session->voltage_min_valid = true;
+            session->voltage_max_uv    = prev_max_voltage;
+            session->voltage_max_valid = true;
+        } else {
+            /* The previous session wasn't valid. */
+            session->voltage_min_valid = false;
+            session->voltage_min_valid = false;
+        }
+
+        R_THROW(set_voltage_result);
     }
 
     Result PowerDomain::IsEnabledCacheValid(bool &enabled) {

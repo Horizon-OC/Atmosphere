@@ -38,6 +38,8 @@ namespace ams::pcv::rgltr {
         private:
             PowerDomain       *m_domain;
             PowerDomainSession m_domain_session{};
+        private:
+            void Signal();
         public:
             explicit RgltrSession(PowerDomain *domain);
             ~RgltrSession();

@@ -33,13 +33,17 @@ namespace ams::pcv::rgltr {
         m_domain->UpdateAfterSessionClose();
     }
 
-    Result RgltrSession::RequestOutput(bool in_enabled) {
-        R_TRY(m_domain->SetOutputRequest(std::addressof(m_domain_session), in_enabled));
-
+    void RgltrSession::Signal() {
         /* Signal event on state table devices. */
         if (IsStateTableDevice(m_domain)) {
             os::SignalSystemEvent(GetStateTableEvent());
         }
+    }
+
+    Result RgltrSession::RequestOutput(bool in_enabled) {
+        R_TRY(m_domain->SetOutputRequest(std::addressof(m_domain_session), in_enabled));
+
+        Signal();
 
         R_SUCCEED();
     }
@@ -69,8 +73,11 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrSession::RequestVoltageInMicroVolt(s32 in_min_uv, s32 in_max_uv) {
-        AMS_UNUSED(in_min_uv, in_max_uv);
-        AMS_ABORT("TODO");
+        R_TRY(m_domain->SetVoltageRequest(std::addressof(m_domain_session), in_min_uv, in_max_uv));
+
+        Signal();
+
+        R_SUCCEED();
     }
 
     Result RgltrSession::CancelVoltageRequest() {

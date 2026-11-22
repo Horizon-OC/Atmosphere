@@ -146,7 +146,6 @@ namespace ams::pcv::rgltr {
 
         constexpr MasterCfg MasterConfig[MasterCount] = { GpuCfg, M2Cfg, VddqCfg, CpuCfg, };
 
-
         void WriteEs2InitRegs() {
             for (size_t i = 0; i < util::size(es2_init_regs); ++i) {
                 /* Read the register */

@@ -22,6 +22,7 @@ R_DEFINE_NAMESPACE_RESULT_MODULE(ams::pcv::rgltr, 192);
 namespace ams::pcv::rgltr {
 
     R_DEFINE_ERROR_RESULT(InvalidArgument,    2);
+    R_DEFINE_ERROR_RESULT(UnsupportedVoltage, 3);
     R_DEFINE_ERROR_RESULT(RequestConflict,    5);
     R_DEFINE_ERROR_RESULT(InsufficientBuffer, 6);
 
