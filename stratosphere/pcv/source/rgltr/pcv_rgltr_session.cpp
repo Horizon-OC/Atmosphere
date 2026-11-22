@@ -81,7 +81,11 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrSession::CancelVoltageRequest() {
-        AMS_ABORT("TODO");
+        R_TRY(m_domain->CancelVoltageRequest(std::addressof(m_domain_session)));
+
+        Signal();
+
+        R_SUCCEED();
     }
 
     Result RgltrSession::GetMinimumOffStateHoldTime(sf::Out<u64> out_hold_time) {

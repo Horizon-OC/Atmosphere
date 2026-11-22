@@ -87,6 +87,10 @@ namespace ams::pcv::rgltr {
             ALWAYS_INLINE bool IsValidSessionVoltage(PowerDomainSession *session) const {
                 return session->voltage_min_valid && session->voltage_max_valid;
             }
+
+            ALWAYS_INLINE bool IsVoltageCached(u32 voltage) const {
+                return m_voltage_cache_valid && m_voltage_cache_uv == voltage;
+            }
         private:
             /* Resolve sessions. */
             Result ResolveOutputRequests(bool &out_found, bool &out_enable);
@@ -100,6 +104,7 @@ namespace ams::pcv::rgltr {
             Result CancelOutputRequest(PowerDomainSession *session);
 
             Result SetVoltageRequest(PowerDomainSession *session, s32 min_uv, s32 max_uv);
+            Result CancelVoltageRequest(PowerDomainSession *session);
         public:
             Result IsEnabledCacheValid(bool &enabled);
             Result IsEnabled(bool &enabled);
