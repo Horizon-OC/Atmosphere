@@ -22,6 +22,7 @@
 #include "pcv_rgltr_power_domain.hpp"
 #include "pcv_rgltr_control.hpp"
 #include "pcv_rgltr_event.hpp"
+#include "pcv_rgltr_sd_power_manager.hpp"
 #include "../pcv_device_registry.hpp"
 #include "../pcv_hardware_type.hpp"
 
@@ -56,7 +57,7 @@ namespace ams::pcv::rgltr {
         };
         static_assert(util::size(g_power_domains) == RegulatorCount);
 
-        constexpr size_t PowerDomainTargetCount = 5;
+        constexpr size_t PowerDomainTargetCount = 6;
         constinit DeviceRegistry<PowerDomain, RegulatorCount + PowerDomainTargetCount> g_domain_registry;
 
         bool IsRegulatorPresent(RegulatorVariant regulator_variant, const char *name) {
@@ -192,6 +193,9 @@ namespace ams::pcv::rgltr {
         /* Initialize all power domains. */
         InitializePowerDomains();
 
+        /* Initialize sd power manager. */
+        GetSdPowerManager().Initialize();
+
         /* Initialize panel voltage. */
         InitializePanelVoltage();
     }
@@ -219,6 +223,10 @@ namespace ams::pcv::rgltr {
 
     PowerDomain *FindPowerDomain(DeviceCode device_code) {
         return g_domain_registry.Find(device_code);
+    }
+
+    void RegisterDomain(PowerDomain *domain, DeviceCode device_code) {
+        g_domain_registry.Register(device_code, domain);
     }
 
     uintptr_t GetDvfsMappings() {

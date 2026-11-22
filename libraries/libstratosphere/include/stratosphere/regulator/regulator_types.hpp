@@ -26,6 +26,7 @@ namespace ams::pcv::rgltr {
     };
 
     /* Power control targets. */
+    constexpr inline const DeviceCode DeviceCode_SdCardPower          = 0x3C000004; /* Ldo2, 1.8V - 3.3V */
     constexpr inline const DeviceCode DeviceCode_GcCardPower3v1       = 0x3C000404; /* Ldo3 */
     constexpr inline const DeviceCode DeviceCode_GcCardPower1v8       = 0x3C000405; /* Ldo5 */
     constexpr inline const DeviceCode DeviceCode_DisplayPortHdmiPower = 0x34000007; /* Ldo8 */

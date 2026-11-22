@@ -72,6 +72,14 @@ namespace ams::pcv::rgltr {
         R_SUCCEED();
     }
 
+    Result RgltrSession::RequestExactVoltageInMicroVolt(s32 voltage_uv) {
+        R_TRY(m_domain->SetVoltageRequest(std::addressof(m_domain_session), voltage_uv, voltage_uv));
+
+        Signal();
+
+        R_SUCCEED();
+    }
+
     Result RgltrSession::CancelVoltageRequest() {
         R_TRY(m_domain->CancelVoltageRequest(std::addressof(m_domain_session)));
 

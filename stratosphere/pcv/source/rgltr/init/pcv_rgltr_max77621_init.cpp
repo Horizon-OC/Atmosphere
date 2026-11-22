@@ -70,14 +70,14 @@ namespace ams::pcv::rgltr {
 
         Result SetupDirection(Regulator &regulator) {
             /* Nintendo treats a failed read the same as the pin being an input. */
-            gpio::GpioDirection direction = gpio::GpioDirection_Input;
+            auto direction = ams::gpio::Direction_Input;
             if (R_FAILED(gpio::GetDirection(std::addressof(regulator.gpio_handle), direction))) {
-                direction = gpio::GpioDirection_Input;
+                direction = ams::gpio::Direction_Input;
             }
 
             /* Ensure the direction is an output. */
-            if (direction != gpio::GpioDirection_Output) {
-                R_TRY(gpio::SetDirection(std::addressof(regulator.gpio_handle), gpio::GpioDirection_Output));
+            if (direction != ams::gpio::Direction_Output) {
+                R_TRY(gpio::SetDirection(std::addressof(regulator.gpio_handle), ams::gpio::Direction_Output));
             }
 
             R_SUCCEED();

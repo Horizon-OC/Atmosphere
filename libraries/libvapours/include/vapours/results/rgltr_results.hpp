@@ -21,10 +21,12 @@ R_DEFINE_NAMESPACE_RESULT_MODULE(ams::pcv::rgltr, 192);
 
 namespace ams::pcv::rgltr {
 
-    R_DEFINE_ERROR_RESULT(InvalidArgument,    2);
-    R_DEFINE_ERROR_RESULT(UnsupportedVoltage, 3);
-    R_DEFINE_ERROR_RESULT(RequestConflict,    5);
-    R_DEFINE_ERROR_RESULT(InsufficientBuffer, 6);
+    R_DEFINE_ERROR_RESULT(NotSupported,        1);
+    R_DEFINE_ERROR_RESULT(InvalidArgument,     2);
+    R_DEFINE_ERROR_RESULT(UnsupportedVoltage,  3);
+    R_DEFINE_ERROR_RESULT(InvalidSdPowerState, 4);
+    R_DEFINE_ERROR_RESULT(RequestConflict,     5);
+    R_DEFINE_ERROR_RESULT(InsufficientBuffer,  6);
 
     R_DEFINE_ERROR_RESULT(InvalidCache, 201);
 

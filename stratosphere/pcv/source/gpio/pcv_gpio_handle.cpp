@@ -75,7 +75,7 @@ namespace ams::pcv::gpio {
         R_SUCCEED();
     }
 
-    Result GetDirection(DeviceHandle *handle, GpioDirection &direction) {
+    Result GetDirection(DeviceHandle *handle, ams::gpio::Direction &direction) {
         R_UNLESS(IsDeviceReady(handle->device_index), DeviceNotReady);
         {
             GpioDevice &device = GetGpioDevice(handle->device_index);
@@ -84,13 +84,13 @@ namespace ams::pcv::gpio {
             R_TRY(I2cRead(*device.session, device.gpio_cfg_reg, out));
 
             /* Input/output direction. */
-            direction = static_cast<GpioDirection>((out & Max77620PmicGpioDirMask) >> Max77620PmicGpioDirShift);
+            direction = static_cast<ams::gpio::Direction>((out & Max77620PmicGpioDirMask) >> Max77620PmicGpioDirShift);
         }
 
         R_SUCCEED();
     }
 
-    Result SetDirection(DeviceHandle *handle, GpioDirection direction) {
+    Result SetDirection(DeviceHandle *handle, ams::gpio::Direction direction) {
         /* Only keep the lowest bit. */
         const u8 dir_bit = static_cast<u8>(direction) & 1;
 

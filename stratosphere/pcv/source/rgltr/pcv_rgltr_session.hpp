@@ -50,6 +50,7 @@ namespace ams::pcv::rgltr {
             Result GetVoltageRangeInMicroVolt(sf::Out<u32> out_min_uv, sf::Out<u32> out_max_uv, sf::Out<u32> out_step_uv);
             Result GetVoltageInMicroVolt(sf::Out<u32> out_uv);
             Result RequestVoltageInMicroVolt(s32 in_min_uv, s32 in_max_uv);
+            Result RequestExactVoltageInMicroVolt(s32 voltage_uv);
             Result CancelVoltageRequest();
             Result GetMinimumOffStateHoldTime(sf::Out<u64> out_hold_time);
             Result RequestMinimumOffStateHoldTime(u64 in_hold_time);

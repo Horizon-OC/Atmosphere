@@ -142,6 +142,7 @@ namespace ams::pcv::rgltr {
     Regulator &GetRegulator(const PowerDomain &domain);
     RegulatorVariant GetRegulatorVariant();
     PowerDomain *FindPowerDomain(DeviceCode device_code);
+    void RegisterDomain(PowerDomain *domain, DeviceCode device_code);
     uintptr_t GetDvfsMappings();
 
     constexpr u32 Cid4Erista = 0x35;

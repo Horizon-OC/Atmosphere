@@ -24,6 +24,7 @@
 #include "pcv_rgltr_max77621.hpp"
 #include "pcv_rgltr_max77812.hpp"
 #include "pcv_rgltr_common_volt.hpp"
+#include "pcv_rgltr_sd_power_manager.hpp"
 
 namespace ams::pcv::rgltr {
 
@@ -154,10 +155,19 @@ namespace ams::pcv::rgltr {
 
             return voltage;
         }
+
+        bool IsSdPowerDomain(const PowerDomain *domain) {
+            return domain == std::addressof(GetSdPowerManager().GetDomain());
+        }
+
     }
 
     Result SetVoltage(PowerDomain *domain, u32 micro_volts) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        if (IsSdPowerDomain(domain)) {
+            R_RETURN(GetSdPowerManager().SetVoltage(micro_volts));
+        }
 
         /* Initialize handle */
         DeviceHandle handle;
@@ -175,6 +185,10 @@ namespace ams::pcv::rgltr {
     Result GetVoltage(PowerDomain *domain, u32 &micro_volts) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
 
+        if (IsSdPowerDomain(domain)) {
+            R_RETURN(GetSdPowerManager().GetVoltage(micro_volts));
+        }
+
         /* Initialize handle */
         DeviceHandle handle;
 
@@ -190,6 +204,11 @@ namespace ams::pcv::rgltr {
 
     Result GetCachedVoltage(PowerDomain *domain, u32 &micro_volts) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        /* SD power domain does not have a voltage cache. */
+        if (IsSdPowerDomain(domain)) {
+            R_THROW(ResultNotSupported());
+        }
 
         if (IsCpuRegulator(domain->GetName())) {
             /* For cpu: read the voltage from lut. */
@@ -216,6 +235,10 @@ namespace ams::pcv::rgltr {
     Result GetVoltageRange(PowerDomain *domain, u32 &min_uv, u32 &max_uv, u32 &step_uv) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
 
+        if (IsSdPowerDomain(domain)) {
+            R_RETURN(GetSdPowerManager().GetVoltageRange(min_uv, max_uv, step_uv));
+        }
+
         /* Initialize handle */
         DeviceHandle handle;
 
@@ -233,6 +256,10 @@ namespace ams::pcv::rgltr {
 
     Result EnablePowerDomain(PowerDomain *domain) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        if (IsSdPowerDomain(domain)) {
+            R_RETURN(GetSdPowerManager().Enable());
+        }
 
         /* Initialize handle */
         DeviceHandle handle;
@@ -252,6 +279,10 @@ namespace ams::pcv::rgltr {
     Result IsPowerDomainEnabled(PowerDomain *domain, bool &enabled) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
 
+        if (IsSdPowerDomain(domain)) {
+            R_RETURN(GetSdPowerManager().IsEnabled(enabled));
+        }
+
         /* Initialize handle */
         DeviceHandle handle;
         if (!InitializeHandleByName(std::addressof(handle), domain->GetName())) {
@@ -268,6 +299,10 @@ namespace ams::pcv::rgltr {
 
     Result DisablePowerDomain(PowerDomain *domain) {
         R_UNLESS(domain != nullptr, ResultInvalidArgument());
+
+        if (IsSdPowerDomain(domain)) {
+            R_RETURN(GetSdPowerManager().Disable());
+        }
 
         /* Initialize handle */
         DeviceHandle handle;

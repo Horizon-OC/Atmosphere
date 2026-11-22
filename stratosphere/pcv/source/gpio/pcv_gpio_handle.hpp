@@ -20,11 +20,6 @@
 
 namespace ams::pcv::gpio {
 
-    enum GpioDirection : u8 {
-        GpioDirection_Output = 0,
-        GpioDirection_Input  = 1,
-    };
-
     enum GpioDriveMode : u8 {
         GpioDriveMode_OpenDrain = 0,
         GpioDriveMode_PushPull  = 1,
@@ -42,8 +37,8 @@ namespace ams::pcv::gpio {
     Result FinalizeHandle(DeviceHandle *handle);
 
     Result ReadAlternateMode(DeviceHandle *handle);
-    Result GetDirection(DeviceHandle *handle, GpioDirection &direction);
-    Result SetDirection(DeviceHandle *handle, GpioDirection direction);
+    Result GetDirection(DeviceHandle *handle, ams::gpio::Direction &direction);
+    Result SetDirection(DeviceHandle *handle, ams::gpio::Direction direction);
     Result GetDriveMode(DeviceHandle *hande, GpioDriveMode &mode);
     Result SetDriveMode(DeviceHandle *hande, GpioDriveMode mode);
     Result GetPullState(DeviceHandle *handle, GpioPullState &out_state);
