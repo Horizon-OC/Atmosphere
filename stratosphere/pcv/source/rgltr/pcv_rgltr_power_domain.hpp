@@ -95,6 +95,7 @@ namespace ams::pcv::rgltr {
             /* Resolve sessions. */
             Result ResolveOutputRequests(bool &out_found, bool &out_enable);
             Result ResolveVoltageRequests(u32 &out_voltage_uv);
+            u64 ResolveOffStateHoldRequests();
         private:
             Result SetOutputEnabled(bool enable);
             Result ApplyRequests(bool enable);
@@ -105,6 +106,10 @@ namespace ams::pcv::rgltr {
 
             Result SetVoltageRequest(PowerDomainSession *session, s32 min_uv, s32 max_uv);
             Result CancelVoltageRequest(PowerDomainSession *session);
+
+            Result GetMinimumOffStateHoldTime(u64 *out_hold_time);
+            Result SetMinimumOffStateHoldRequest(PowerDomainSession *session, u64 hold_time);
+            Result CancelMinimumOffStateHoldTimeRequest(PowerDomainSession *session);
         public:
             Result IsEnabledCacheValid(bool &enabled);
             Result IsEnabled(bool &enabled);

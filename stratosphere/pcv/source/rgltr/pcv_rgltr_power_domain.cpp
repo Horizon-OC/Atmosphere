@@ -77,6 +77,19 @@ namespace ams::pcv::rgltr {
         R_THROW(ResultInvalidCache());
     }
 
+    u64 PowerDomain::ResolveOffStateHoldRequests() {
+        u64 max_hold_time{};
+
+        /* Find the largest requested hold time. */
+        for (const auto *session_entry : m_attached_sessions) {
+            if (session_entry->hold_time_valid && session_entry->hold_time > max_hold_time) {
+                max_hold_time = session_entry->hold_time;
+            }
+        }
+
+        return max_hold_time;
+    }
+
     Result PowerDomain::SetOutputEnabled(bool enable) {
         R_SUCCEED_IF(IsEnabledInCache(enable));
 
@@ -213,7 +226,6 @@ namespace ams::pcv::rgltr {
             R_CATCH(ResultInvalidCache) { /* ... */ }
         } R_END_TRY_CATCH;
 
-
         /* Check if we need to change the voltage at all. */
         R_SUCCEED_IF(IsVoltageCached(voltage_request));
 
@@ -222,6 +234,38 @@ namespace ams::pcv::rgltr {
         /* Cache the new voltage. */
         m_voltage_cache_uv    = voltage_request;
         m_voltage_cache_valid = true;
+
+        R_SUCCEED();
+    }
+
+    Result PowerDomain::GetMinimumOffStateHoldTime(u64 *out_hold_time) {
+        std::scoped_lock lk(m_mutex);
+
+        *out_hold_time = m_min_off_hold_time_ns;
+
+        R_SUCCEED();
+    }
+
+    Result PowerDomain::SetMinimumOffStateHoldRequest(PowerDomainSession *session, u64 hold_time) {
+        std::scoped_lock lk(m_mutex);
+
+        session->hold_time       = hold_time;
+        session->hold_time_valid = true;
+
+        /* Resolve the minimum off hold time by finding the largest request. */
+        m_min_off_hold_time_ns = ResolveOffStateHoldRequests();
+
+        R_SUCCEED();
+    }
+
+    Result PowerDomain::CancelMinimumOffStateHoldTimeRequest(PowerDomainSession *session) {
+        std::scoped_lock lk(m_mutex);
+
+        /* Invalide the hold time. */
+        session->hold_time_valid = false;
+
+        /* Resolve it */
+        m_min_off_hold_time_ns = ResolveOffStateHoldRequests();
 
         R_SUCCEED();
     }

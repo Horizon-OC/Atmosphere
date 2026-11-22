@@ -53,22 +53,14 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrSession::IsOutputEnabled(sf::Out<bool> out_enabled) {
-        R_UNLESS(out_enabled.GetPointer() != nullptr, ResultInvalidArgument());
-
         R_RETURN(m_domain->IsEnabled(*out_enabled));
     }
 
     Result RgltrSession::GetVoltageRangeInMicroVolt(sf::Out<u32> out_min_uv, sf::Out<u32> out_max_uv, sf::Out<u32> out_step_uv) {
-        R_UNLESS(out_min_uv.GetPointer()  != nullptr, ResultInvalidArgument());
-        R_UNLESS(out_max_uv.GetPointer()  != nullptr, ResultInvalidArgument());
-        R_UNLESS(out_step_uv.GetPointer() != nullptr, ResultInvalidArgument());
-
         R_RETURN(GetVoltageRange(m_domain, *out_min_uv, *out_max_uv, *out_step_uv));
     }
 
     Result RgltrSession::GetVoltageInMicroVolt(sf::Out<u32> out_uv) {
-        R_UNLESS(out_uv.GetPointer() != nullptr, ResultInvalidArgument());
-
         R_RETURN(m_domain->GetVoltage(*out_uv));
     }
 
@@ -89,17 +81,15 @@ namespace ams::pcv::rgltr {
     }
 
     Result RgltrSession::GetMinimumOffStateHoldTime(sf::Out<u64> out_hold_time) {
-        AMS_UNUSED(out_hold_time);
-        AMS_ABORT("TODO");
+        R_RETURN(m_domain->GetMinimumOffStateHoldTime(out_hold_time.GetPointer()));
     }
 
     Result RgltrSession::RequestMinimumOffStateHoldTime(u64 in_hold_time) {
-        AMS_UNUSED(in_hold_time);
-        AMS_ABORT("TODO");
+        R_RETURN(m_domain->SetMinimumOffStateHoldRequest(std::addressof(m_domain_session), in_hold_time));
     }
 
     Result RgltrSession::CancelMinimumOffStateHoldTimeRequest() {
-        AMS_ABORT("TODO");
+        R_RETURN(m_domain->CancelMinimumOffStateHoldTimeRequest(std::addressof(m_domain_session)));
     }
 
 }
