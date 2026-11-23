@@ -15,9 +15,10 @@
  */
 
 #include <stratosphere.hpp>
-#include "pcv_clkrst_device.hpp"
 #include "../pcv_hardware_type.hpp"
 #include "../pcv_device_registry.hpp"
+#include "pcv_clkrst_device.hpp"
+#include "pcv_clkrst_clock.hpp"
 
 namespace ams::pcv::clkrst {
 
@@ -61,6 +62,9 @@ namespace ams::pcv::clkrst {
 
     void Initialize() {
         RegisterModules(IsMariko());
+
+        /* Entering hell. */
+        InitializeClock();
     }
 
 }

@@ -104,6 +104,7 @@ constinit ClkrstDevice g_device_table[] = {
     { ModuleId_Extperiph2,        Module_Extperiph2      },
     { ModuleId_Max,               Module_Count           },
 };
+
 constexpr inline size_t ClkrstDeviceCount = std::size(g_device_table);
 
 constinit inline ClkrstDeviceAlias g_device_alias_table[] = {
@@ -125,4 +126,5 @@ constinit inline ClkrstDeviceAlias g_device_alias_table[] = {
     { ModuleId_UartC_Alias, ModuleId_UartC  },
     { ModuleId_UartD_Alias, ModuleId_UartD  },
 };
+
 constexpr inline size_t ClkrstDeviceAliasCount = std::size(g_device_alias_table);
