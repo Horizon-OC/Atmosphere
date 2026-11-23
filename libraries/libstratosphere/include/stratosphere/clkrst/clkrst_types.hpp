@@ -16,8 +16,10 @@
 #pragma once
 #include <vapours.hpp>
 
-namespace ams::clkrst {
+namespace ams::pcv::clkrst {
 
-    /* ... */
+    constexpr inline const DeviceCode DeviceCode_Sdmmc1 = 0x40000015;
+    constexpr inline const DeviceCode DeviceCode_Sdmmc2 = 0x40000016;
+    constexpr inline const DeviceCode DeviceCode_Sdmmc4 = 0x40000018;
 
 }

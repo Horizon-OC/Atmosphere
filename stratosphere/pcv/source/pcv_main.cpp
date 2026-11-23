@@ -21,6 +21,8 @@
 #include "bpc/pcv_bpc.hpp"
 #include "bpc/pcv_bpc_service.hpp"
 
+#include "clkrst/pcv_clkrst_arbitration_manager.hpp"
+
 #include "rgltr/pcv_rgltr.hpp"
 #include "rgltr/pcv_rgltr_manager.hpp"
 
@@ -65,6 +67,7 @@ namespace ams {
         namespace bpc {
 
             namespace {
+
                 constexpr sm::ServiceName BpcServiceName = sm::ServiceName::Encode("bpc");
                 constexpr size_t          BpcMaxSessions = 13;
 
@@ -95,6 +98,7 @@ namespace ams {
         namespace rgltr {
 
             namespace {
+
                 constexpr sm::ServiceName RgltrServiceName = sm::ServiceName::Encode("rgltr");
                 constexpr size_t          RgltrMaxSessions = 30;
 
@@ -117,6 +121,29 @@ namespace ams {
                 R_ABORT_UNLESS(os::CreateThread(std::addressof(g_thread), ThreadFunction, nullptr, g_thread_stack, sizeof(g_thread_stack), AMS_GET_SYSTEM_THREAD_PRIORITY(pcv, RgltrIpcServer)));
                 os::SetThreadNamePointer(std::addressof(g_thread), AMS_GET_SYSTEM_THREAD_NAME(pcv, RgltrIpcServer));
                 os::StartThread(std::addressof(g_thread));
+            }
+
+        }
+
+        namespace clkrst {
+
+            namespace {
+
+                constexpr sm::ServiceName ClkrstArbitrationServiceName = sm::ServiceName::Encode("clkrst:a");
+                constexpr size_t          ClkrstArbitrationMaxSessions = 1;
+
+                sf::hipc::ServerManager<1, sf::hipc::DefaultServerManagerOptions, ClkrstArbitrationMaxSessions> g_arbitration_server_manager;
+                sf::UnmanagedServiceObject<IClkrstArbitrationManager, ClkrstArbitrationManager> g_arbitration_service{std::addressof(g_arbitration_server_manager)};
+
+            }
+
+            void InitializeArbitrationServer() {
+                R_ABORT_UNLESS(g_arbitration_server_manager.RegisterObjectForServer(g_arbitration_service.GetShared(), ClkrstArbitrationServiceName, ClkrstArbitrationMaxSessions));
+            }
+
+            void RunArbitrationServer() {
+                g_arbitration_server_manager.ResumeProcessing();
+                g_arbitration_server_manager.LoopProcess();
             }
 
         }
@@ -192,6 +219,11 @@ namespace ams {
         pcv::bpc::StartPowerManager();
         pcv::bpc::InitializeServer();
         pcv::bpc::StartServer();
+
+        /* Initialize clkrst arbitration manager. */
+        pcv::clkrst::InitializeArbitrationServer();
+        /* Blocks until control is released. */
+        pcv::clkrst::RunArbitrationServer();
 
         /* Initialize rgltr */
         pcv::rgltr::Initialize();
