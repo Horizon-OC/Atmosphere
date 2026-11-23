@@ -20,5 +20,6 @@
 namespace ams::pcv {
 
     spl::HardwareType GetHardwareType();
+    bool IsMariko();
 
 }

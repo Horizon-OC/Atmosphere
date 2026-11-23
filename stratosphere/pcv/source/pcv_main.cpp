@@ -26,6 +26,8 @@
 #include "rgltr/pcv_rgltr.hpp"
 #include "rgltr/pcv_rgltr_manager.hpp"
 
+#include "clkrst/pcv_clkrst.hpp"
+
 #include "pcv_service/pcv_service_fuse.hpp"
 #include "pcv_service/pcv_service.hpp"
 
@@ -229,6 +231,9 @@ namespace ams {
         pcv::rgltr::Initialize();
         pcv::rgltr::InitializeServer();
         pcv::rgltr::StartServer();
+
+        /* Initialize clkrst. */
+        pcv::clkrst::Initialize();
 
         /* Initialize pcv services. */
         pcv::detail::InitializeFuseInfo();

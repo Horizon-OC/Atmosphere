@@ -33,4 +33,8 @@ namespace ams::pcv {
         return static_cast<spl::HardwareType>(hardware_type);
     }
 
+    bool IsMariko() {
+        return GetHardwareType() >= spl::HardwareType::Hoag;
+    }
+
 }
