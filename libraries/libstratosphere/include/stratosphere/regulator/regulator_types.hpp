@@ -18,6 +18,12 @@
 
 namespace ams::pcv::rgltr {
 
+    enum RegulatorVariant : u32 {
+        RegulatorVariant_Erista_Max77621   = 0, /* 15A/15A cpu/gpu configuration. */
+        RegulatorVariant_Mariko_Max77812_A = 1, /* Prototype, 5A/15A configuration (cpu/gpu). */
+        RegulatorVariant_Mariko_Max77812_B = 2, /* Final version, 5/10/5A configuration (cpu/gpu/vddq) */
+    };
+
     struct PowerDomainState {
         DeviceCode device_code;
         bool enabled;

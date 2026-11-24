@@ -127,12 +127,6 @@ namespace ams::pcv::rgltr {
         u8 sw_enable;
     };
 
-    enum RegulatorVariant : u32 {
-        RegulatorVariant_Erista_Max77621   = 0, /* 15A/15A cpu/gpu configuration. */
-        RegulatorVariant_Mariko_Max77812_A = 1, /* Prototype, 5A/15A configuration (cpu/gpu). */
-        RegulatorVariant_Mariko_Max77812_B = 2, /* Final version, 5/10/5A configuration (cpu/gpu/vddq) */
-    };
-
     constexpr inline size_t RegulatorCount = 18;
     constexpr inline u32 RegulatorMaxIdx   = RegulatorCount - 1;
 

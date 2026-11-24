@@ -15,7 +15,9 @@
  */
 
 #include <stratosphere.hpp>
+#include "../pcv_hardware_type.hpp"
 #include "pcv_clkrst_settings.hpp"
+#include "pcv_clkrst_pll.hpp"
 
 namespace ams::pcv::clkrst {
 
@@ -24,6 +26,13 @@ namespace ams::pcv::clkrst {
         uintptr_t g_car_mapping{};
         uintptr_t g_gpu_mapping{};
         uintptr_t g_fuse_mapping{};
+
+        const ClkPllInfo       *g_clk_pll_info_table        = nullptr;
+        const ClkDeviceRegInfo *g_clk_device_reg_info_table = nullptr;
+        ClkSystemInfo          *g_clk_system_info_table     = nullptr;
+
+        constinit u8 g_pll_div_table[]         = { 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24, 30, 32, };
+        static_assert(sizeof(g_pll_div_table) == 17);
 
         void MapCar() {
             constexpr dd::PhysicalAddress CarBase = 0x60006000;
@@ -90,6 +99,20 @@ namespace ams::pcv::clkrst {
             SleepUs(2);
         }
 
+        void SetPllTables(bool is_mariko) {
+            /* Assign the tables. */
+            g_clk_pll_info_table        = GetPllInfoTable(is_mariko);
+            g_clk_system_info_table     = GetClkSystemInfoTable(is_mariko);
+            g_clk_device_reg_info_table = GetClkDeviceRegInfoTable(is_mariko);
+
+            /* Set maximum allowed divider */
+            u8 max_allowed_divider = is_mariko ? 31 : 32;
+            g_pll_div_table[std::size(g_pll_div_table) - 1] = max_allowed_divider;
+
+            /* Apply max frequencies. */
+            InitializeDeviceMaxFreqs(is_mariko);
+        }
+
         void InitClockSocInfo() {
             /* Setup mappings */
             MapCar();
@@ -97,6 +120,9 @@ namespace ams::pcv::clkrst {
             InitGpuClockMappings();
 
             SetUsb2ClkSource();
+
+            /* Configure tables and adjust max freq. */
+            SetPllTables(IsMariko());
         }
 
     }

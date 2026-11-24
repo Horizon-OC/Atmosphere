@@ -22,4 +22,22 @@ namespace ams::pcv {
     spl::HardwareType GetHardwareType();
     bool IsMariko();
 
+    namespace clkrst {
+
+        enum FormFactor : u32 {
+            FormFactor_Console  = 1,
+            FormFactor_Standard = 4,
+            FormFactor_Handheld = 7,
+        };
+
+        struct BoardInfo {
+            const char *code_name;
+            FormFactor form_factor;
+            rgltr::RegulatorVariant regulator_variant;
+        };
+
+        BoardInfo &GetBoardInfo();
+
+    }
+
 }
