@@ -55,10 +55,10 @@ namespace ams::pcv::clkrst {
     };
 
     struct ClkPllSdm {
-        u32 unk_0;
-        u32 unk_4;
-        u32 unk_8;
-        u32 unk_c;
+        u32 lock_reg_idx;
+        u32 lock_mask;
+        u32 sdm_reg_idx;
+        u32 sdm_shift;
     };
     static_assert(sizeof(ClkPllSdm) == 0x10);
 
@@ -97,62 +97,17 @@ namespace ams::pcv::clkrst {
     };
     static_assert(sizeof(ClkPllInfo) == 0xB8);
 
-    enum ClkSystemInfoType : u32 {
-        ClkSystemInfoType_Sclk,
-        ClkSystemInfoType_Cclk,
-        ClkSystemInfoType_Hclk,
-        ClkSystemInfoType_Pclk,
-        ClkSystemInfoType_Emc,
-        ClkSystemInfoType_Aclk,
-    };
+    void InitializePll(bool is_mariko);
 
-    struct ClkSystemInfo {
-        const char *name;
-        ClkSystemInfoType type;
-        u32 source_id;
-        const void *source;
-        u32 max_freq_khz;
-        u32 unk_1C;
-        const char *unk_20;
-        void *dvfs;
-    };
-    static_assert(sizeof(ClkSystemInfo) == 0x30);
+    const ClkPllInfo *GetPllInfoTable();
 
-    enum ClkDivType : u32 {
-        ClkDivType_None       = 0,
-        ClkDivType_Fractional = 1, /* 8 bit 7.1 divider */
-        ClkDivType_Uart       = 2, /* UARTA-D, UARTAPE */
-        ClkDivType_Integer16  = 3, /* I2C1-6, 16 bit */
-        ClkDivType_Unk5       = 5, /* 8 bit */
-    };
+    u32 GetPllPDivider(size_t p);
 
-    struct ClkDeviceRegInfo {
-        const char *name;
-        u32 unk_08;
-        u32 flags;
-        u32 clk_source_reg;
-        u32 mux_mask;
-        u32 mux_shift;
-        u32 div_mask;
-        u32 div_shift;
-        u8  unk_24[8];
-        ClkDivType div_type;
-        u32 rst_set_reg;
-        u32 rst_clr_reg;
-        u32 clk_enb_set_reg;
-        u32 clk_enb_clr_reg;
-        u32 bank_bit;
-        u32 max_freq_khz;
-        u32 parent_ids[8];
-        const char *gate_clock_name;
-        u32 unk_c8[10];
-    };
+    u32 CalcFreqFromDivider71(u32 in_khz, u32 div, bool bypass, bool enable);
+    u32 CalcFreqShift(u32 in_khz, u32 shift, bool bypass, bool enable);
+    u32 CommonDivMN32(u32 in_khz, u32 m, u32 n, bool bypass, bool enable);
 
-    const ClkPllInfo *GetPllInfoTable(bool is_mariko);
-    ClkSystemInfo *GetClkSystemInfoTable(bool is_mariko);
-    const ClkDeviceRegInfo *GetClkDeviceRegInfoTable(bool is_mariko);
-
-    void InitializeDeviceMaxFreqs(bool is_mariko);
-    u32 GetDeviceMaxFreqKhz(size_t device_index);
+    u32 CalcPllFreq(size_t pll_index, u32 ref_khz, u32 m, u32 n, u32 p, bool bypass, bool enable, bool shift_pdiv);
+    u32 ReadPllFreq(size_t pll_index, u32 ref_khz, bool use_bypass, bool shift_pdiv);
 
 }

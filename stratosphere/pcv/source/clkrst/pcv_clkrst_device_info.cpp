@@ -13,33 +13,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include <stratosphere.hpp>
 #include "../pcv_hardware_type.hpp"
-#include "pcv_clkrst_pll.hpp"
+#include "pcv_clkrst_table_util.hpp"
+#include "pcv_clkrst_device_info.hpp"
 
 namespace ams::pcv::clkrst {
 
     namespace {
 
-        #include "pcv_clkrst_pll_data.inc"
-
-        template<size_t N>
-        consteval size_t FindDeviceRegInfoIndex(const ClkDeviceRegInfo (&table)[N], std::string_view name) {
-            for (size_t i = 0; i < N; ++i) {
-                if (std::string_view(table[i].name) == name) {
-                    return i;
-                }
-            }
-
-            return N;
-        }
+        #include "pcv_clkrst_device_info_data.inc"
 
         static_assert(std::size(ClkDeviceRegInfoTableT210) == std::size(ClkDeviceRegInfoTableT210B01));
 
-        constexpr size_t Sor1DeviceIndex = FindDeviceRegInfoIndex(ClkDeviceRegInfoTableT210, "SOR1");
+        constexpr size_t Sor1DeviceIndex = FindIndexByName(ClkDeviceRegInfoTableT210, "SOR1");
         static_assert(Sor1DeviceIndex < std::size(ClkDeviceRegInfoTableT210));
-        static_assert(Sor1DeviceIndex == FindDeviceRegInfoIndex(ClkDeviceRegInfoTableT210B01, "SOR1"));
+        static_assert(Sor1DeviceIndex == FindIndexByName(ClkDeviceRegInfoTableT210B01, "SOR1"));
 
         constinit u32 g_device_max_freq_khz[std::size(ClkDeviceRegInfoTableT210)] = {};
 
@@ -47,34 +36,25 @@ namespace ams::pcv::clkrst {
             return board.form_factor == FormFactor_Standard;
         }
 
+        constinit ClkSystemInfo          *g_clk_system_info_table     = nullptr;
+        constinit const ClkDeviceRegInfo *g_clk_device_reg_info_table = nullptr;
+
     }
 
-    const ClkPllInfo *GetPllInfoTable(bool is_mariko) {
-        if (is_mariko) {
-            return PllInfoTableT210B01;
-        } else {
-            return PllInfoTableT210;
-        }
+    ClkSystemInfo *GetClkSystemInfoTable() {
+        return g_clk_system_info_table;
     }
 
-    ClkSystemInfo *GetClkSystemInfoTable(bool is_mariko) {
-        if (is_mariko) {
-            return ClkSystemInfoTableT210B01;
-        } else {
-            return ClkSystemInfoTableT210;
-        }
+    const ClkDeviceRegInfo *GetClkDeviceRegInfoTable() {
+        return g_clk_device_reg_info_table;
     }
 
-    const ClkDeviceRegInfo *GetClkDeviceRegInfoTable(bool is_mariko) {
-        if (is_mariko) {
-            return ClkDeviceRegInfoTableT210B01;
-        } else {
-            return ClkDeviceRegInfoTableT210;
-        }
-    }
+    void InitializeDeviceInfo(bool is_mariko) {
+        g_clk_system_info_table     = is_mariko ? ClkSystemInfoTableT210B01     : ClkSystemInfoTableT210;
+        g_clk_device_reg_info_table = is_mariko ? ClkDeviceRegInfoTableT210B01  : ClkDeviceRegInfoTableT210;
 
-    void InitializeDeviceMaxFreqs(bool is_mariko) {
-        const ClkDeviceRegInfo *table = GetClkDeviceRegInfoTable(is_mariko);
+        /* Apply max frequencies. */
+        const ClkDeviceRegInfo *table = g_clk_device_reg_info_table;
 
         for (size_t i = 0; i < std::size(g_device_max_freq_khz); ++i) {
             g_device_max_freq_khz[i] = table[i].max_freq_khz;

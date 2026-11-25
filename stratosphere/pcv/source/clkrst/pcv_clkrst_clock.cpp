@@ -13,59 +13,21 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 #include <stratosphere.hpp>
 #include "../pcv_hardware_type.hpp"
 #include "pcv_clkrst_settings.hpp"
+#include "pcv_clkrst_car.hpp"
 #include "pcv_clkrst_pll.hpp"
+#include "pcv_clkrst_source.hpp"
+#include "pcv_clkrst_device_info.hpp"
+#include "pcv_clkrst_clock.hpp"
 
 namespace ams::pcv::clkrst {
 
     namespace {
 
-        uintptr_t g_car_mapping{};
         uintptr_t g_gpu_mapping{};
         uintptr_t g_fuse_mapping{};
-
-        const ClkPllInfo       *g_clk_pll_info_table        = nullptr;
-        const ClkDeviceRegInfo *g_clk_device_reg_info_table = nullptr;
-        ClkSystemInfo          *g_clk_system_info_table     = nullptr;
-
-        constinit u8 g_pll_div_table[]         = { 1, 2, 3, 4, 5, 6, 8, 9, 10, 12, 15, 16, 18, 20, 24, 30, 32, };
-        static_assert(sizeof(g_pll_div_table) == 17);
-
-        void MapCar() {
-            constexpr dd::PhysicalAddress CarBase = 0x60006000;
-            constexpr size_t              CarSize = 0x1000;
-
-            g_car_mapping = dd::QueryIoMapping(CarBase, CarSize);
-
-            AMS_ABORT_UNLESS(g_car_mapping != 0);
-        }
-
-        inline void WriteCarReg(u32 reg, u32 value) {
-            reg::Write(g_car_mapping + reg, value);
-        }
-
-        inline u32 ReadCarReg(u32 reg) {
-            return reg::Read(g_car_mapping + reg);
-        }
-
-        /* TODO: Mmove some of these into more generic util files. */
-        void SleepUs(u32 us) {
-            static constinit uintptr_t tmr_mapping{};
-            if (tmr_mapping == 0) {
-                constexpr dd::PhysicalAddress TmrBase = 0x60005000;
-                constexpr size_t              TmrSize = 0x1000;
-
-                tmr_mapping = dd::QueryIoMapping(TmrBase, TmrSize);
-                AMS_ABORT_UNLESS(tmr_mapping != 0);
-            }
-
-            constexpr u32 TimerUsCounter = 0x10;
-            const u32 start = reg::Read(tmr_mapping + TimerUsCounter);
-            while (reg::Read(tmr_mapping + TimerUsCounter) - start <= us) { /* spin. */ }
-        }
 
         void InitGpuClockMappings() {
             /* Query gpu mapping. */
@@ -88,41 +50,79 @@ namespace ams::pcv::clkrst {
             g_fuse_mapping += FuseOffset;
         }
 
-        void SetUsb2ClkSource() {
+        void SetupUsb2ClkSource() {
             constexpr u32 Usb2Divisor = 6;
-
-            WriteCarReg(CLK_RST_CONTROLLER_CLK_SOURCE_USB2_HSIC_TRK, Usb2Divisor);
-            AMS_UNUSED(ReadCarReg(CLK_RST_CONTROLLER_CLK_SOURCE_USB2_HSIC_TRK));
-
-            __asm__ __volatile__("dsb st" ::: "memory");
-
-            SleepUs(2);
+            WriteClkReg(CLK_RST_CONTROLLER_CLK_SOURCE_USB2_HSIC_TRK, Usb2Divisor);
         }
 
-        void SetPllTables(bool is_mariko) {
-            /* Assign the tables. */
-            g_clk_pll_info_table        = GetPllInfoTable(is_mariko);
-            g_clk_system_info_table     = GetClkSystemInfoTable(is_mariko);
-            g_clk_device_reg_info_table = GetClkDeviceRegInfoTable(is_mariko);
+        void SetupSataUsbClkSource() {
+            constexpr u32 DivisorMask  = 0xFF;
+            constexpr u32 RefclkDivBy4 = 6;
+            constexpr u32 RefClkEnable = BIT(8);
 
-            /* Set maximum allowed divider */
-            u8 max_allowed_divider = is_mariko ? 31 : 32;
-            g_pll_div_table[std::size(g_pll_div_table) - 1] = max_allowed_divider;
+            u32 reg = ReadCarReg(CLK_RST_CONTROLLER_CLK_SOURCE_PEX_SATA_USB_RX_BYP);
 
-            /* Apply max frequencies. */
-            InitializeDeviceMaxFreqs(is_mariko);
+            /* Set the divisor */
+            reg &= ~DivisorMask;
+            reg |= RefclkDivBy4;
+
+            WriteClkReg(CLK_RST_CONTROLLER_CLK_SOURCE_PEX_SATA_USB_RX_BYP, reg);
+
+            /* Enable the clock */
+            WriteClkReg(CLK_RST_CONTROLLER_CLK_SOURCE_PEX_SATA_USB_RX_BYP, reg | RefClkEnable);
+        }
+
+        void SetupUartFstMipiCalClkSource() {
+            /* Check if it's already running */
+            constexpr u32 ClkEnabled = BIT(17);
+            if (ReadCarReg(CLK_RST_CONTROLLER_CLK_SOURCE_UART_FST_MIPI_CAL) & ClkEnabled) {
+                return;
+            }
+
+            constexpr u32 ClkSrcPllpOut0 = BIT(29);
+            constexpr u32 DivBy6         = 10;
+
+            /* Enable it */
+            WriteClkReg(CLK_RST_CONTROLLER_CLK_SOURCE_UART_FST_MIPI_CAL, ClkSrcPllpOut0 | DivBy6);
+        }
+
+        void SetupSpdifInClkSource() {
+            /* Once again check if it's enabled */
+            constexpr u32 ClkEnabled  = BIT(10);
+            constexpr u32 ClkSrcShift = 29;
+            constexpr u32 ClkSrcClkM  = 5 << ClkSrcShift;
+            constexpr u32 DivBy1      = 0;
+
+            if (ReadCarReg(CLK_RST_CONTROLLER_CLK_SOURCE_SPDIF_IN) & ClkEnabled) {
+                return;
+            }
+
+            WriteClkReg(CLK_RST_CONTROLLER_CLK_SOURCE_SPDIF_IN, ClkSrcClkM | DivBy1);
         }
 
         void InitClockSocInfo() {
             /* Setup mappings */
-            MapCar();
+            InitializeCar();
 
             InitGpuClockMappings();
 
-            SetUsb2ClkSource();
+            SetupUsb2ClkSource();
+
+            bool is_mariko = IsMariko();
 
             /* Configure tables and adjust max freq. */
-            SetPllTables(IsMariko());
+            InitializePll(is_mariko);
+            InitializeDeviceInfo(is_mariko);
+
+            if (is_mariko) {
+                /* Setup clock sources. */
+                SetupSataUsbClkSource();
+                SetupUartFstMipiCalClkSource();
+                SetupSpdifInClkSource();
+            }
+
+            /* Reload them. */
+            ReloadSourceClocks();
         }
 
     }
